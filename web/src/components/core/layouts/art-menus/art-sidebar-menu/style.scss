@@ -1,0 +1,352 @@
+@use '@styles/variables.scss' as *;
+
+.layout-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 101;
+  display: flex;
+  height: 100vh;
+  user-select: none;
+  scrollbar-width: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.no-border {
+    border-right: none !important;
+  }
+
+  .dual-menu-left {
+    position: relative;
+    width: 80px;
+    height: 100%;
+    border-right: 1px solid var(--art-card-border) !important;
+    background: var(--art-bg-color);
+
+    // 隐藏滚动条
+    :deep(.el-scrollbar__bar.is-vertical) {
+      display: none;
+    }
+
+    .logo {
+      margin: auto;
+      margin-top: 15px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+
+    ul {
+      li {
+        > div {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          text-align: center;
+          cursor: pointer;
+          border-radius: 8px;
+          margin: 4px 8px;
+          padding: 12px 8px;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+          &:hover {
+            background: var(--art-gray-100);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          }
+
+          i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 4px;
+            transition: all 0.2s ease;
+          }
+
+          span {
+            display: block;
+            width: 100%;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+          }
+
+          &.is-active {
+            background: var(--main-color);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(var(--main-color-rgb), 0.3);
+
+            i,
+            span {
+              color: #fff !important;
+            }
+          }
+        }
+      }
+    }
+
+    .switch-btn {
+      position: absolute;
+      right: 0;
+      bottom: 15px;
+      left: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      i {
+        display: block;
+        align-items: center;
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+        line-height: 40px;
+        text-align: center;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        &:hover {
+          background-color: var(--art-gray-200);
+          transform: scale(1.1);
+        }
+      }
+    }
+  }
+
+  :deep(.badge) {
+    position: absolute;
+    top: 0;
+    right: 20px;
+    bottom: 0;
+    width: 6px;
+    height: 6px;
+    margin: auto;
+    background: #ff3860;
+    border-radius: 50%;
+    animation: breathe 1.5s ease-in-out infinite;
+    box-shadow: 0 0 8px rgba(255, 56, 96, 0.5);
+  }
+
+  :deep(.text-badge) {
+    position: absolute;
+    top: 0;
+    right: 12px;
+    bottom: 0;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    margin: auto;
+    font-size: 12px;
+    line-height: 20px;
+    color: #fff;
+    text-align: center;
+    background: #fd4e4e;
+    border-radius: 10px;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(253, 78, 78, 0.3);
+  }
+
+  .header {
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 60px;
+    overflow: hidden;
+    line-height: 60px;
+    cursor: pointer;
+    background: var(--art-bg-color);
+    border-bottom: 1px solid var(--art-card-border);
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: var(--art-gray-50);
+    }
+
+    .logo {
+      margin-left: 28px;
+      transition: transform 0.2s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+
+    p {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 64px;
+      box-sizing: border-box;
+      margin-left: 10px;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--art-text-color-primary);
+
+      &.is-dual-menu-name {
+        right: 0;
+        left: 0;
+        margin: auto;
+        text-align: center;
+      }
+    }
+  }
+
+  .el-menu {
+    box-sizing: border-box;
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+    // 防止菜单内的滚动影响整个页面滚动
+    overscroll-behavior: contain;
+    border-right: 0;
+    scrollbar-width: none;
+    -ms-scroll-chaining: contain;
+    background: var(--art-bg-color);
+
+    &::-webkit-scrollbar {
+      width: 0 !important;
+    }
+
+    // 优化菜单项样式
+    :deep(.el-menu-item) {
+      margin: 2px 8px;
+      border-radius: 8px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+      &:hover {
+        background: var(--art-gray-100) !important;
+        transform: translateX(4px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      &.is-active {
+        background: var(--main-color) !important;
+        color: #fff !important;
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(var(--main-color-rgb), 0.3);
+
+        .menu-icon {
+          color: #fff !important;
+        }
+      }
+    }
+
+    :deep(.el-sub-menu) {
+      .el-sub-menu__title {
+        margin: 2px 8px;
+        border-radius: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        &:hover {
+          background: var(--art-gray-100) !important;
+          transform: translateX(4px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+      }
+
+      &.is-active {
+        .el-sub-menu__title {
+          background: var(--main-color) !important;
+          color: #fff !important;
+          transform: translateX(4px);
+          box-shadow: 0 4px 12px rgba(var(--main-color-rgb), 0.3);
+
+          .menu-icon {
+            color: #fff !important;
+          }
+        }
+      }
+    }
+
+    // 菜单图标样式
+    :deep(.menu-icon) {
+      font-size: 16px;
+      margin-right: 8px;
+      transition: all 0.2s ease;
+    }
+
+    // 菜单名称样式
+    :deep(.menu-name) {
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+  }
+
+  .menu-model {
+    display: none;
+  }
+}
+
+@media only screen and (max-width: $device-ipad) {
+  .layout-sidebar {
+    .header {
+      display: none;
+    }
+
+    .el-menu {
+      height: 100vh;
+    }
+
+    .el-menu--collapse {
+      width: 0;
+    }
+  }
+}
+
+@media only screen and (max-width: $device-ipad) {
+  .layout-sidebar {
+    width: 0;
+
+    .menu-model {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
+      display: block;
+      width: 100%;
+      height: 100vh;
+      background: rgba($color: #000, $alpha: 50%);
+      transition: opacity 0.3s ease-in-out;
+      backdrop-filter: blur(4px);
+    }
+  }
+}
+
+@keyframes breathe {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+}
+
+// 添加菜单加载动画
+@keyframes menuSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.layout-sidebar .el-menu {
+  animation: menuSlideIn 0.3s ease-out;
+}
