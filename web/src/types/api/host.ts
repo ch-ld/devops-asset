@@ -22,6 +22,7 @@ export interface HostGroup {
   parent_id?: number;
   path: string;
   sort: number;
+  host_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -36,8 +37,8 @@ export interface Host {
   region: string;
   username: string;
   password: string;
-  public_ip: string[];
-  private_ip: string[];
+  public_ip: string[] | string;
+  private_ip: string[] | string;
   configuration: {
     cpu_cores?: number;
     memory_size?: number;
@@ -92,6 +93,50 @@ export interface SFTPResult {
 
 export interface HostAlert {
   host: Host;
-  alert_type: 'expired' | 'expiring' | 'error' | 'abnormal';
+  alert_type: 'expired' | 'expiring' | 'error' | 'abnormal' | 'unreachable';
   message: string;
+  time: string;
+  level?: 'info' | 'warning' | 'error' | 'critical';
+  is_resolved?: boolean;
+  resolve_time?: string;
+  resolve_by?: string;
+  resolve_comment?: string;
+}
+
+export interface HostMetrics {
+  host_id: number;
+  host_name: string;
+  timestamp: string;
+  cpu_usage: number;
+  memory_usage: number;
+  disk_usage: number;
+  network_in: number;
+  network_out: number;
+  load_1: number;
+  load_5: number;
+  load_15: number;
+  process_count: number;
+  uptime: number;
+  status: string;
+  ip: string;
+}
+
+export interface HostMetricsHistory {
+  timestamps: string[];
+  cpu: number[];
+  memory: number[];
+  disk: number[];
+  network_in: number[];
+  network_out: number[];
+}
+
+export interface FileInfo {
+  name: string;
+  path: string;
+  size: number;
+  is_dir: boolean;
+  permissions: string;
+  owner: string;
+  group: string;
+  mod_time: string;
 } 

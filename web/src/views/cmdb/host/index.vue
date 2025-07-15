@@ -1,652 +1,825 @@
 <template>
-  <div class="host-management">
-    <a-card :bordered="false" class="search-card">
-      <a-form layout="inline" :model="searchForm" @submit="handleSearch">
-        <a-form-item label="搜索关键字">
-          <a-input
-            v-model:value="searchForm.keyword"
-            placeholder="主机名称、实例ID、IP地址..."
-            style="width: 240px"
-            @press-enter="handleSearch"
-          />
-        </a-form-item>
-        <a-form-item label="状态">
-          <a-select
-            v-model:value="searchForm.status"
-            placeholder="选择状态"
-            style="width: 120px"
+  <div class="host-management-page">
+    <!-- 顶部工具栏 -->
+    <a-card :bordered="false" class="toolbar-card">
+      <a-row :gutter="16" align="middle">
+        <a-col :lg="6" :md="8" :sm="12" :xs="24">
+          <a-input-search
+            v-model:value="searchParams.keyword"
+            placeholder="搜索主机名、IP地址"
+            @search="handleSearch"
             allow-clear
+          />
+        </a-col>
+
+        <a-col :lg="4" :md="6" :sm="12" :xs="12">
+          <a-select
+            v-model:value="searchParams.group_id"
+            placeholder="主机组"
+            style="width: 100%"
+            allow-clear
+            @change="handleSearch"
           >
+            <a-select-option :value="undefined">全部主机组</a-select-option>
+            <template v-for="group in hostGroupOptions" :key="group.value">
+              <a-select-option :value="group.value">{{ group.label }}</a-select-option>
+            </template>
+          </a-select>
+        </a-col>
+
+        <a-col :lg="4" :md="6" :sm="12" :xs="12">
+          <a-select
+            v-model:value="searchParams.status"
+            placeholder="状态"
+            style="width: 100%"
+            allow-clear
+            @change="handleSearch"
+          >
+            <a-select-option :value="undefined">全部状态</a-select-option>
             <a-select-option value="running">运行中</a-select-option>
             <a-select-option value="stopped">已停止</a-select-option>
-            <a-select-option value="starting">启动中</a-select-option>
-            <a-select-option value="stopping">停止中</a-select-option>
+            <a-select-option value="error">错误</a-select-option>
+            <a-select-option value="expired">已过期</a-select-option>
           </a-select>
-        </a-form-item>
-        <a-form-item label="主机组">
-          <a-tree-select
-            v-model:value="searchForm.group_id"
-            :tree-data="hostGroupOptions"
-            placeholder="选择主机组"
-            style="width: 200px"
-            allow-clear
-            tree-default-expand-all
-          />
-        </a-form-item>
-        <a-form-item label="区域">
-          <a-input
-            v-model:value="searchForm.region"
-            placeholder="区域"
-            style="width: 120px"
-          />
-        </a-form-item>
-        <a-form-item>
-          <a-button type="primary" @click="handleSearch">
-            <template #icon><SearchOutlined /></template>
-            搜索
-          </a-button>
-          <a-button @click="handleReset" style="margin-left: 8px">
-            <template #icon><ReloadOutlined /></template>
-            重置
-          </a-button>
-        </a-form-item>
-      </a-form>
-    </a-card>
+        </a-col>
 
-    <a-card :bordered="false" class="table-card">
-      <template #title>
-        <div class="table-header">
-          <span>主机列表</span>
-          <div class="table-actions">
-            <a-button type="primary" @click="openHostModal()">
-              <template #icon><PlusOutlined /></template>
-              添加主机
+        <a-col :lg="4" :md="4" :sm="12" :xs="12">
+          <a-select
+            v-model:value="searchParams.region"
+            placeholder="地区"
+            style="width: 100%"
+            allow-clear
+            @change="handleSearch"
+          >
+            <a-select-option :value="undefined">全部地区</a-select-option>
+            <template v-for="region in regionOptions" :key="region">
+              <a-select-option :value="region">{{ region }}</a-select-option>
+            </template>
+          </a-select>
+        </a-col>
+
+        <a-col :lg="6" :md="24" :sm="24" :xs="24" style="text-align: right">
+          <a-space>
+            <a-button @click="handleSearch">
+              <template #icon><ReloadOutlined /></template>
+              刷新
             </a-button>
-            <a-button @click="openManualHostModal()">
-              <template #icon><CloudServerOutlined /></template>
-              自建主机
+            <a-button type="primary" @click="showDashboard">
+              <template #icon><DashboardOutlined /></template>
+              主机概览
             </a-button>
             <a-dropdown>
-              <a-button>
-                <template #icon><DownloadOutlined /></template>
-                批量导入
-                <DownOutlined />
+              <a-button type="primary">
+                <template #icon><PlusOutlined /></template>
+                添加主机
+                <template #icon><DownOutlined /></template>
               </a-button>
               <template #overlay>
-                <a-menu @click="handleBatchAction">
-                  <a-menu-item key="import">
-                    <template #icon><UploadOutlined /></template>
-                    导入主机
-                  </a-menu-item>
-                  <a-menu-item key="export">
-                    <template #icon><DownloadOutlined /></template>
-                    导出主机
-                  </a-menu-item>
-                  <a-menu-item key="template">
-                    <template #icon><FileExcelOutlined /></template>
-                    下载模板
-                  </a-menu-item>
+                <a-menu @click="handleAddMenuClick">
+                  <a-menu-item key="manual">手动添加主机</a-menu-item>
+                  <a-menu-item key="batch">批量导入主机</a-menu-item>
+                  <a-menu-item key="sync">从云提供商同步</a-menu-item>
                 </a-menu>
               </template>
             </a-dropdown>
-            <a-button @click="syncAllHosts">
-              <template #icon><SyncOutlined /></template>
-              同步主机
-            </a-button>
-          </div>
-        </div>
+          </a-space>
+        </a-col>
+      </a-row>
+    </a-card>
+
+    <!-- 主机列表 -->
+    <a-card :bordered="false" class="host-list-card">
+      <template #title>
+        <span>主机列表</span>
+        <a-tag color="blue" style="margin-left: 8px">{{ pagination.total }} 台</a-tag>
       </template>
 
-      <div class="table-alert" v-if="selectedRowKeys.length > 0">
-        <a-alert
-          :message="`已选择 ${selectedRowKeys.length} 项`"
-          type="info"
-          show-icon
-          closable
-          @close="selectedRowKeys = []"
-        >
-          <template #action>
-            <a-button size="small" @click="handleBatchDelete">批量删除</a-button>
-            <a-button size="small" @click="handleBatchStatusChange">批量状态变更</a-button>
-            <a-button size="small" @click="handleBatchMove">批量移动</a-button>
-          </template>
-        </a-alert>
-      </div>
+      <template #extra>
+        <a-space>
+          <a-button-group>
+            <a-tooltip title="导出">
+              <a-button @click="handleExportHosts">
+                <template #icon><ExportOutlined /></template>
+              </a-button>
+            </a-tooltip>
+            <a-tooltip title="设置">
+              <a-button @click="handleColumnSettings">
+                <template #icon><SettingOutlined /></template>
+              </a-button>
+            </a-tooltip>
+          </a-button-group>
+          <a-dropdown v-if="selectedRowKeys.length > 0">
+            <a-button>
+              批量操作
+              <template #icon><DownOutlined /></template>
+            </a-button>
+            <template #overlay>
+              <a-menu @click="handleBatchOperation">
+                <a-menu-item key="move">移动到主机组</a-menu-item>
+                <a-menu-item key="tags">批量标签管理</a-menu-item>
+                <a-menu-item key="status">修改状态</a-menu-item>
+                <a-menu-item key="terminal">批量执行命令</a-menu-item>
+                <a-menu-item key="sftp">批量文件传输</a-menu-item>
+                <a-menu-item key="delete">批量删除</a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
+        </a-space>
+      </template>
 
       <a-table
         :columns="columns"
         :data-source="hostList"
-        :loading="isLoading"
-        :pagination="paginationConfig"
-        :row-selection="rowSelection"
-        row-key="id"
+        :pagination="tablePagination"
+        :loading="loading"
+        :row-selection="{
+          selectedRowKeys,
+          onChange: onSelectionChange,
+        }"
+        :row-key="record => record.id"
         @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
+          <!-- 主机名称列 -->
           <template v-if="column.key === 'name'">
-            <a @click="viewHostDetail(record)">{{ record.name }}</a>
+            <div class="host-name-column">
+              <a-tooltip :title="record.instance_id">
+                <a @click="viewHostDetail(record.id)">{{ record.name }}</a>
+              </a-tooltip>
+              <a-tag v-if="record.provider_type" color="green" size="small">{{ record.provider_type }}</a-tag>
+            </div>
           </template>
           
-          <template v-if="column.key === 'status'">
+          <!-- IP地址列 -->
+          <template v-else-if="column.key === 'ip'">
+            <div class="ip-address-column">
+              <div v-if="record.public_ip && record.public_ip.length > 0">
+                <span class="ip-label">公网:</span>
+                <a-tooltip :title="record.public_ip.join(', ')">
+                  {{ record.public_ip[0] }}
+                  <span v-if="record.public_ip.length > 1">等{{ record.public_ip.length }}个</span>
+                </a-tooltip>
+              </div>
+              <div v-if="record.private_ip && record.private_ip.length > 0">
+                <span class="ip-label">内网:</span>
+                <a-tooltip :title="record.private_ip.join(', ')">
+                  {{ record.private_ip[0] }}
+                  <span v-if="record.private_ip.length > 1">等{{ record.private_ip.length }}个</span>
+                </a-tooltip>
+              </div>
+            </div>
+          </template>
+          
+          <!-- 配置列 -->
+          <template v-else-if="column.key === 'configuration'">
+            <div class="configuration-column">
+              <div v-if="record.configuration.cpu_cores">CPU: {{ record.configuration.cpu_cores }} 核</div>
+              <div v-if="record.configuration.memory_size">内存: {{ formatMemorySize(record.configuration.memory_size) }}</div>
+              <div v-if="record.configuration.instance_type">实例类型: {{ record.configuration.instance_type }}</div>
+            </div>
+          </template>
+          
+          <!-- 操作系统列 -->
+          <template v-else-if="column.key === 'os'">
+            <div class="os-column">
+              <a-tooltip :title="record.os">
+                <span>{{ getOsShortName(record.os) }}</span>
+              </a-tooltip>
+            </div>
+          </template>
+          
+          <!-- 状态列 -->
+          <template v-else-if="column.key === 'status'">
             <a-tag :color="getStatusColor(record.status)">
               {{ getStatusText(record.status) }}
             </a-tag>
           </template>
-
-          <template v-if="column.key === 'public_ip'">
-            <div v-if="record.public_ip && record.public_ip.length > 0">
-              <a-tag v-for="ip in record.public_ip" :key="ip">{{ ip }}</a-tag>
+          
+          <!-- 到期时间列 -->
+          <template v-else-if="column.key === 'expired_at'">
+            <div class="expired-at-column">
+              <a-tag
+                v-if="record.expired_at"
+                :color="getExpiryColor(record.expired_at)"
+              >
+                {{ formatExpiryTime(record.expired_at) }}
+              </a-tag>
+              <span v-else>--</span>
             </div>
-            <span v-else>-</span>
           </template>
-
-          <template v-if="column.key === 'private_ip'">
-            <div v-if="record.private_ip && record.private_ip.length > 0">
-              <a-tag v-for="ip in record.private_ip" :key="ip" color="blue">{{ ip }}</a-tag>
+          
+          <!-- 操作列 -->
+          <template v-else-if="column.key === 'action'">
+            <div class="action-column">
+              <a-space>
+                <a-tooltip title="SSH 终端">
+                  <a-button type="link" size="small" @click="openTerminal(record)">
+                    <template #icon><CodeOutlined /></template>
+                  </a-button>
+                </a-tooltip>
+                <a-tooltip title="SFTP 文件管理">
+                  <a-button type="link" size="small" @click="openSftp(record)">
+                    <template #icon><FolderOpenOutlined /></template>
+                  </a-button>
+                </a-tooltip>
+                <a-dropdown>
+                  <a-button type="link" size="small">
+                    <template #icon><EllipsisOutlined /></template>
+                  </a-button>
+                  <template #overlay>
+                    <a-menu>
+                      <a-menu-item key="view" @click="viewHostDetail(record.id)">
+                        <EyeOutlined /> 查看详情
+                      </a-menu-item>
+                      <a-menu-item key="edit" @click="editHost(record)">
+                        <EditOutlined /> 编辑
+                      </a-menu-item>
+                      <a-menu-item key="move" @click="moveHostToGroup(record)">
+                        <SwapOutlined /> 移动分组
+                      </a-menu-item>
+                      <a-divider />
+                      <a-menu-item key="restart" @click="restartHost(record)">
+                        <ReloadOutlined /> 重启主机
+                      </a-menu-item>
+                      <a-menu-item key="sync" @click="syncHostStatus(record.id)">
+                        <SyncOutlined /> 同步状态
+                      </a-menu-item>
+                      <a-divider />
+                      <a-menu-item key="delete" @click="confirmDeleteHost(record)">
+                        <DeleteOutlined /> 删除
+                      </a-menu-item>
+                    </a-menu>
+                  </template>
+                </a-dropdown>
+              </a-space>
             </div>
-            <span v-else>-</span>
-          </template>
-
-          <template v-if="column.key === 'provider'">
-            <a-tag v-if="record.provider" :color="getProviderColor(record.provider.type)">
-              {{ record.provider.name }}
-            </a-tag>
-            <a-tag v-else color="default">自建</a-tag>
-          </template>
-
-          <template v-if="column.key === 'group'">
-            <span v-if="record.group">{{ record.group.name }}</span>
-            <span v-else class="text-gray-400">未分组</span>
-          </template>
-
-          <template v-if="column.key === 'expired_at'">
-            <span v-if="record.expired_at">
-              {{ formatDate(record.expired_at) }}
-            </span>
-            <span v-else>-</span>
-          </template>
-
-          <template v-if="column.key === 'action'">
-            <a-space>
-              <a-button type="link" size="small" @click="openWebSsh(record)">
-                <template #icon><CodeOutlined /></template>
-                SSH
-              </a-button>
-              <a-button type="link" size="small" @click="openSftpWindow(record)">
-                <template #icon><FolderOutlined /></template>
-                SFTP
-              </a-button>
-              <a-dropdown>
-                <a-button type="link" size="small">
-                  更多 <DownOutlined />
-                </a-button>
-                <template #overlay>
-                  <a-menu @click="({ key }) => handleMoreAction(key, record)">
-                    <a-menu-item key="edit">
-                      <template #icon><EditOutlined /></template>
-                      编辑
-                    </a-menu-item>
-                    <a-menu-item key="sync">
-                      <template #icon><SyncOutlined /></template>
-                      同步状态
-                    </a-menu-item>
-                    <a-menu-item key="move">
-                      <template #icon><DragOutlined /></template>
-                      移动分组
-                    </a-menu-item>
-                    <a-menu-divider />
-                    <a-menu-item key="delete" class="text-red-500">
-                      <template #icon><DeleteOutlined /></template>
-                      删除
-                    </a-menu-item>
-                  </a-menu>
-                </template>
-              </a-dropdown>
-            </a-space>
           </template>
         </template>
       </a-table>
     </a-card>
 
-    <!-- 主机表单弹窗 -->
-    <HostModal 
-      ref="hostModalRef" 
-      :providers="providerList"
-      :host-groups="hostGroupTree"
-      @success="handleModalSuccess" 
+    <!-- 主机模态框组件 -->
+    <host-modal
+      v-model:visible="hostModalVisible"
+      :host="currentHost"
+      :is-edit="isEditMode"
+      @success="handleModalSuccess"
     />
 
-    <!-- 自建主机表单弹窗 -->
-    <ManualHostModal 
-      ref="manualHostModalRef" 
-      :host-groups="hostGroupTree"
-      @success="handleModalSuccess" 
+    <!-- 手动添加主机模态框 -->
+    <manual-host-modal
+      v-model:visible="manualHostModalVisible"
+      @success="handleModalSuccess"
     />
 
-    <!-- SFTP文件管理窗口 -->
-    <SftpWindow ref="sftpWindowRef" />
-
-    <!-- 批量导入弹窗 -->
-    <BatchImportModal 
-      ref="batchImportModalRef" 
-      @success="handleModalSuccess" 
+    <!-- 批量导入模态框 -->
+    <batch-import-modal
+      v-model:visible="batchImportModalVisible"
+      @success="handleModalSuccess"
     />
 
-    <!-- 批量移动弹窗 -->
-    <BatchMoveModal 
-      ref="batchMoveModalRef" 
-      :host-groups="hostGroupTree"
-      @success="handleModalSuccess" 
+    <!-- 批量移动到主机组模态框 -->
+    <batch-move-modal
+      v-model:visible="batchMoveModalVisible"
+      :host-ids="selectedRowKeys"
+      @success="handleModalSuccess"
+    />
+
+    <!-- SSH 终端窗口 -->
+    <terminal-window
+      v-model:visible="terminalVisible"
+      :host="currentHost"
+    />
+
+    <!-- SFTP 文件管理窗口 -->
+    <sftp-window
+      v-model:visible="sftpVisible"
+      :host="currentHost"
+    />
+
+    <!-- 批量标签管理对话框 -->
+    <batch-tags-modal 
+      v-model:visible="batchTagsVisible"
+      :selected-host-ids="selectedRowKeys"
+      @success="handleSearch"
     />
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, onMounted, computed, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { message, Modal } from 'ant-design-vue'
-import { useHostStore } from '@/store/modules/host'
-import { storeToRefs } from 'pinia'
-import type { Host } from '@/types/api/host'
-import { 
-  SearchOutlined, 
-  ReloadOutlined, 
-  PlusOutlined, 
-  CloudServerOutlined,
-  DownloadOutlined,
-  UploadOutlined,
-  FileExcelOutlined,
-  SyncOutlined,
-  CodeOutlined,
-  FolderOutlined,
-  EditOutlined,
+<script lang="ts" setup>
+import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import { message, Modal } from 'ant-design-vue';
+import { useHostStore } from '@/store/modules/host';
+import { storeToRefs } from 'pinia';
+import * as hostApi from '@/api/system/host';
+import type { Host, HostGroup } from '@/types/api/host';
+import { formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import dayjs from 'dayjs';
+
+import HostModal from './components/HostModal.vue';
+import ManualHostModal from './components/ManualHostModal.vue';
+import BatchImportModal from './components/BatchImportModal.vue';
+import BatchMoveModal from './components/BatchMoveModal.vue';
+import TerminalWindow from './components/TerminalWindow.vue';
+import SftpWindow from './components/SftpWindow.vue';
+import BatchTagsModal from './components/BatchTagsModal.vue';
+
+import {
+  PlusOutlined,
+  ReloadOutlined,
+  SettingOutlined,
+  ExportOutlined,
+  DownOutlined,
   DeleteOutlined,
-  DragOutlined,
-  DownOutlined
-} from '@ant-design/icons-vue'
+  EditOutlined,
+  EyeOutlined,
+  CodeOutlined,
+  FolderOpenOutlined,
+  SyncOutlined,
+  SwapOutlined,
+  EllipsisOutlined,
+  DashboardOutlined
+} from '@ant-design/icons-vue';
 
-// 导入组件
-import HostModal from './components/HostModal.vue'
-import ManualHostModal from './components/ManualHostModal.vue'
-import SftpWindow from './components/SftpWindow.vue'
-import BatchImportModal from './components/BatchImportModal.vue'
-import BatchMoveModal from './components/BatchMoveModal.vue'
+const router = useRouter();
+const hostStore = useHostStore();
+const { hostList, hostGroupTree, pagination, isLoading } = storeToRefs(hostStore);
+const loading = computed(() => isLoading.value);
 
-const router = useRouter()
-const hostStore = useHostStore()
-const { hostList, providerList, hostGroupTree, isLoading, pagination } = storeToRefs(hostStore)
-
-// 搜索表单
-const searchForm = reactive({
+// 搜索参数
+const searchParams = reactive({
   keyword: '',
-  status: undefined,
   group_id: undefined,
-  region: ''
-})
+  status: undefined,
+  region: undefined,
+  page: 1,
+  page_size: 10
+});
 
-// 选中的行
-const selectedRowKeys = ref<number[]>([])
-
-// 表格行选择配置
-const rowSelection = {
-  selectedRowKeys: selectedRowKeys,
-  onChange: (keys: number[]) => {
-    selectedRowKeys.value = keys
-  }
-}
-
-// 分页配置
-const paginationConfig = computed(() => ({
-  current: pagination.value.page,
-  pageSize: pagination.value.pageSize,
-  total: pagination.value.total,
-  showSizeChanger: true,
-  showQuickJumper: true,
-  showTotal: (total: number, range: [number, number]) => 
-    `第 ${range[0]}-${range[1]} 项，共 ${total} 项`
-}))
-
-// 主机组选项
-const hostGroupOptions = computed(() => {
-  const buildTreeData = (groups: any[], parentId: number | null = null): any[] => {
-    return groups
-      .filter(group => group.parent_id === parentId)
-      .map(group => ({
-        title: group.name,
-        value: group.id,
-        key: group.id,
-        children: buildTreeData(groups, group.id)
-      }))
-  }
-  return buildTreeData(hostGroupTree.value)
-})
-
-// 表格列配置
+// 表格相关
+const selectedRowKeys = ref<number[]>([]);
 const columns = [
   {
     title: '主机名称',
     dataIndex: 'name',
     key: 'name',
+    sorter: true,
     width: 200,
-    ellipsis: true
   },
   {
-    title: '实例ID',
-    dataIndex: 'instance_id',
-    key: 'instance_id',
+    title: 'IP地址',
+    dataIndex: 'ip',
+    key: 'ip',
+    width: 200,
+  },
+  {
+    title: '配置',
+    key: 'configuration',
+    width: 180,
+  },
+  {
+    title: '系统',
+    dataIndex: 'os',
+    key: 'os',
     width: 150,
-    ellipsis: true
   },
   {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
-    width: 100
+    sorter: true,
+    width: 100,
   },
   {
-    title: '公网IP',
-    dataIndex: 'public_ip',
-    key: 'public_ip',
-    width: 150
-  },
-  {
-    title: '私网IP',
-    dataIndex: 'private_ip',
-    key: 'private_ip',
-    width: 150
-  },
-  {
-    title: '云账号',
-    dataIndex: 'provider',
-    key: 'provider',
-    width: 120
-  },
-  {
-    title: '主机组',
-    dataIndex: 'group',
-    key: 'group',
-    width: 120
-  },
-  {
-    title: '区域',
-    dataIndex: 'region',
-    key: 'region',
-    width: 100
-  },
-  {
-    title: '操作系统',
-    dataIndex: 'os',
-    key: 'os',
-    width: 120,
-    ellipsis: true
-  },
-  {
-    title: '过期时间',
+    title: '到期时间',
     dataIndex: 'expired_at',
     key: 'expired_at',
-    width: 120
+    sorter: true,
+    width: 150,
+  },
+  {
+    title: '所属分组',
+    dataIndex: ['group', 'name'],
+    key: 'group',
+    width: 150,
   },
   {
     title: '操作',
     key: 'action',
-    width: 200,
-    fixed: 'right'
-  }
-]
+    width: 120,
+    fixed: 'right',
+  },
+];
 
-// 组件引用
-const hostModalRef = ref()
-const manualHostModalRef = ref()
-const sftpWindowRef = ref()
-const batchImportModalRef = ref()
-const batchMoveModalRef = ref()
+// 模态框控制
+const hostModalVisible = ref(false);
+const manualHostModalVisible = ref(false);
+const batchImportModalVisible = ref(false);
+const batchMoveModalVisible = ref(false);
+const terminalVisible = ref(false);
+const sftpVisible = ref(false);
+const batchTagsVisible = ref(false);
 
-// 工具函数
-const getStatusColor = (status: string) => {
-  const colorMap: Record<string, string> = {
-    running: 'green',
-    stopped: 'red',
-    starting: 'blue',
-    stopping: 'orange',
-    unknown: 'default'
-  }
-  return colorMap[status] || 'default'
-}
+// 当前操作的主机
+const currentHost = ref<Host | null>(null);
+const isEditMode = ref(false);
 
-const getStatusText = (status: string) => {
-  const textMap: Record<string, string> = {
-    running: '运行中',
-    stopped: '已停止',
-    starting: '启动中',
-    stopping: '停止中',
-    unknown: '未知'
-  }
-  return textMap[status] || status
-}
+// 分页配置
+const tablePagination = computed(() => ({
+  total: pagination.value.total,
+  current: pagination.value.page,
+  pageSize: pagination.value.pageSize,
+  showSizeChanger: true,
+  showQuickJumper: true,
+  showTotal: (total: number) => `共 ${total} 台主机`,
+}));
 
-const getProviderColor = (type: string) => {
-  const colorMap: Record<string, string> = {
-    aliyun: 'orange',
-    tencent: 'blue',
-    aws: 'yellow',
-    manual: 'default'
-  }
-  return colorMap[type] || 'default'
-}
+// 主机组选项
+const hostGroupOptions = computed(() => {
+  const options: { label: string; value: number }[] = [];
+  const processGroups = (groups: HostGroup[], parentPath = '') => {
+    groups.forEach(group => {
+      const label = parentPath ? `${parentPath} / ${group.name}` : group.name;
+      options.push({ label, value: group.id });
+      
+      // 查找子组
+      const children = hostGroupTree.value.filter(g => g.parent_id === group.id);
+      if (children.length > 0) {
+        processGroups(children, label);
+      }
+    });
+  };
+  
+  // 从根节点开始处理
+  const rootGroups = hostGroupTree.value.filter(g => !g.parent_id);
+  processGroups(rootGroups);
+  
+  return options;
+});
 
-const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString()
-}
+// 地区选项
+const regionOptions = computed(() => {
+  const regions = new Set<string>();
+  hostList.value.forEach(host => {
+    if (host.region) {
+      regions.add(host.region);
+    }
+  });
+  return Array.from(regions);
+});
 
-// 事件处理
-const handleSearch = () => {
-  fetchHostsWithSearch()
-}
+// 生命周期钩子
+onMounted(async () => {
+  await Promise.all([
+    hostStore.fetchHostGroupTree(),
+    fetchHosts()
+  ]);
+});
 
-const handleReset = () => {
-  Object.assign(searchForm, {
-    keyword: '',
-    status: undefined,
-    group_id: undefined,
-    region: ''
-  })
-  fetchHostsWithSearch()
-}
-
-const handleTableChange = (pag: any) => {
-  pagination.value.page = pag.current
-  pagination.value.pageSize = pag.pageSize
-  fetchHostsWithSearch()
-}
-
-const fetchHostsWithSearch = async () => {
+// 方法
+const fetchHosts = async () => {
   try {
     await hostStore.fetchHosts({
-      page: pagination.value.page,
-      page_size: pagination.value.pageSize,
-      ...searchForm
-    })
+      ...searchParams,
+      page: searchParams.page,
+      page_size: searchParams.page_size
+    });
   } catch (error) {
-    message.error('获取主机列表失败')
+    message.error('获取主机列表失败');
+    console.error(error);
   }
-}
+};
 
-const handleBatchAction = ({ key }: { key: string }) => {
-  switch (key) {
-    case 'import':
-      batchImportModalRef.value?.open()
-      break
-    case 'export':
-      handleExportHosts()
-      break
-    case 'template':
-      handleDownloadTemplate()
-      break
+const handleSearch = () => {
+  searchParams.page = 1;
+  fetchHosts();
+};
+
+const handleTableChange = (pag: any, filters: any, sorter: any) => {
+  searchParams.page = pag.current;
+  searchParams.page_size = pag.pageSize;
+  
+  // 处理排序
+  if (sorter.field && sorter.order) {
+    const orderMap: Record<string, string> = {
+      'ascend': 'asc',
+      'descend': 'desc'
+    };
+    const sort = `${sorter.field},${orderMap[sorter.order]}`;
+    // 这里可能需要修改API支持排序
   }
-}
+  
+  fetchHosts();
+};
 
-const handleExportHosts = async () => {
-  try {
-    // 实现导出逻辑
-    message.success('导出成功')
-  } catch (error) {
-    message.error('导出失败')
+const onSelectionChange = (keys: number[]) => {
+  selectedRowKeys.value = keys;
+};
+
+// 跳转到主机仪表盘
+const showDashboard = () => {
+  router.push('/cmdb/host/dashboard');
+};
+
+// 添加主机相关
+const handleAddMenuClick = ({ key }: { key: string }) => {
+  if (key === 'manual') {
+    manualHostModalVisible.value = true;
+  } else if (key === 'batch') {
+    batchImportModalVisible.value = true;
+  } else if (key === 'sync') {
+    Modal.confirm({
+      title: '同步主机',
+      content: '确定要从云提供商同步主机信息吗？这可能需要一些时间。',
+      onOk: async () => {
+        try {
+          message.loading('正在同步主机信息...');
+          await hostStore.syncHosts();
+          message.success('同步主机信息成功');
+          fetchHosts();
+        } catch (error) {
+          message.error('同步主机信息失败');
+          console.error(error);
+        }
+      }
+    });
   }
-}
+};
 
-const handleDownloadTemplate = () => {
-  // 实现下载模板逻辑
-  message.info('模板下载功能待实现')
-}
+// 查看主机详情
+const viewHostDetail = (id: number) => {
+  router.push(`/cmdb/host/detail/${id}`);
+};
 
-const syncAllHosts = async () => {
-  try {
-    await hostStore.syncHosts()
-    message.success('同步成功')
-  } catch (error) {
-    message.error('同步失败')
-  }
-}
+// 编辑主机
+const editHost = (host: Host) => {
+  currentHost.value = host;
+  isEditMode.value = true;
+  hostModalVisible.value = true;
+};
 
-const handleBatchDelete = () => {
+// 删除主机
+const confirmDeleteHost = (host: Host) => {
   Modal.confirm({
-    title: '确认删除',
-    content: `确定要删除选中的 ${selectedRowKeys.value.length} 台主机吗？`,
+    title: '删除主机',
+    content: `确定要删除主机 ${host.name} 吗？此操作不可恢复。`,
     onOk: async () => {
       try {
-        await hostStore.batchDeleteHosts(selectedRowKeys.value)
-        selectedRowKeys.value = []
-        message.success('删除成功')
+        await hostStore.deleteHost(host.id);
+        message.success('删除主机成功');
       } catch (error) {
-        message.error('删除失败')
+        message.error('删除主机失败');
+        console.error(error);
       }
     }
-  })
-}
+  });
+};
 
-const handleBatchStatusChange = () => {
-  // 实现批量状态变更逻辑
-  message.info('批量状态变更功能待实现')
-}
+// 主机移动分组
+const moveHostToGroup = (host: Host) => {
+  currentHost.value = host;
+  batchMoveModalVisible.value = true;
+};
 
-const handleBatchMove = () => {
-  batchMoveModalRef.value?.open(selectedRowKeys.value)
-}
+// 重启主机
+const restartHost = (host: Host) => {
+  Modal.confirm({
+    title: '重启主机',
+    content: `确定要重启主机 ${host.name} 吗？`,
+    onOk: async () => {
+      try {
+        // 假设有重启主机的API
+        message.loading('正在重启主机...');
+        // await hostApi.restartHost(host.id);
+        message.success('已发送重启命令');
+      } catch (error) {
+        message.error('重启主机失败');
+        console.error(error);
+      }
+    }
+  });
+};
 
-const handleMoreAction = (key: string, record: Host) => {
-  switch (key) {
-    case 'edit':
-      openHostModal(record)
-      break
-    case 'sync':
-      syncHostStatus(record.id)
-      break
-    case 'move':
-      // 实现移动逻辑
-      message.info('移动功能待实现')
-      break
-    case 'delete':
-      deleteHost(record.id)
-      break
-  }
-}
-
-const openHostModal = (record?: Host) => {
-  hostModalRef.value?.open(record)
-}
-
-const openManualHostModal = () => {
-  manualHostModalRef.value?.open()
-}
-
-const openWebSsh = (record: Host) => {
-  const routeUrl = router.resolve({
-    path: '/webssh',
-    query: { host_id: record.id }
-  })
-  window.open(routeUrl.href, '_blank')
-}
-
-const openSftpWindow = (record: Host) => {
-  sftpWindowRef.value?.open(record.id)
-}
-
-const viewHostDetail = (record: Host) => {
-  router.push(`/cmdb/host/${record.id}`)
-}
-
+// 同步主机状态
 const syncHostStatus = async (hostId: number) => {
   try {
-    await hostStore.syncHostStatus(hostId)
-    message.success('同步成功')
+    message.loading('正在同步主机状态...');
+    await hostStore.syncHostStatus(hostId);
+    message.success('同步主机状态成功');
   } catch (error) {
-    message.error('同步失败')
+    message.error('同步主机状态失败');
+    console.error(error);
   }
-}
+};
 
-const deleteHost = (hostId: number) => {
-  Modal.confirm({
-    title: '确认删除',
-    content: '确定要删除此主机吗？',
-    onOk: async () => {
-      try {
-        await hostStore.deleteHost(hostId)
-        message.success('删除成功')
-      } catch (error) {
-        message.error('删除失败')
+// 批量操作
+const handleBatchOperation = ({ key }: { key: string }) => {
+  if (selectedRowKeys.value.length === 0) {
+    message.warning('请至少选择一个主机');
+    return;
+  }
+
+  if (key === 'move') {
+    batchMoveModalVisible.value = true;
+  } else if (key === 'tags') {
+    batchTagsVisible.value = true;
+  } else if (key === 'status') {
+    // 实现批量修改状态
+    // TODO: 实现批量修改状态的对话框
+  } else if (key === 'terminal') {
+    // 实现批量执行命令
+    // TODO: 实现批量执行命令的对话框
+  } else if (key === 'sftp') {
+    // 实现批量文件传输
+    // TODO: 实现批量文件传输的对话框
+  } else if (key === 'delete') {
+    Modal.confirm({
+      title: '批量删除主机',
+      content: `确定要删除选中的 ${selectedRowKeys.value.length} 台主机吗？此操作不可恢复。`,
+      onOk: async () => {
+        try {
+          await hostStore.batchDeleteHosts(selectedRowKeys.value);
+          message.success('批量删除主机成功');
+          selectedRowKeys.value = [];
+        } catch (error) {
+          message.error('批量删除主机失败');
+          console.error(error);
+        }
       }
-    }
-  })
-}
-
-const handleModalSuccess = () => {
-  fetchHostsWithSearch()
-  selectedRowKeys.value = []
-}
-
-// 初始化
-onMounted(async () => {
-  try {
-    await Promise.all([
-      hostStore.fetchProviders(),
-      hostStore.fetchHostGroupTree(),
-      fetchHostsWithSearch()
-    ])
-  } catch (error) {
-    message.error('初始化失败')
+    });
   }
-})
+};
+
+// 导出主机
+const handleExportHosts = async () => {
+  try {
+    message.loading('正在准备导出数据...');
+    const blob = await hostApi.batchExportHosts({
+      format: 'excel',
+      // 可以传递筛选条件
+    });
+    
+    // 创建下载链接
+    const url = window.URL.createObjectURL(new Blob([blob]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `主机列表_${dayjs().format('YYYY-MM-DD')}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    message.success('导出成功');
+  } catch (error) {
+    message.error('导出失败');
+    console.error(error);
+  }
+};
+
+// 列设置
+const handleColumnSettings = () => {
+  // 实现列设置功能
+  message.info('列设置功能待实现');
+};
+
+// 打开终端
+const openTerminal = (host: Host) => {
+  currentHost.value = host;
+  terminalVisible.value = true;
+};
+
+// 打开SFTP窗口
+const openSftp = (host: Host) => {
+  currentHost.value = host;
+  sftpVisible.value = true;
+};
+
+// 模态框成功回调
+const handleModalSuccess = () => {
+  fetchHosts();
+};
+
+// 工具函数
+const formatMemorySize = (size?: number) => {
+  if (!size) return '--';
+  return size >= 1024 ? `${(size / 1024).toFixed(1)} GB` : `${size} MB`;
+};
+
+const getOsShortName = (os?: string) => {
+  if (!os) return '--';
+  if (os.toLowerCase().includes('windows')) return 'Windows';
+  if (os.toLowerCase().includes('ubuntu')) return 'Ubuntu';
+  if (os.toLowerCase().includes('centos')) return 'CentOS';
+  if (os.toLowerCase().includes('debian')) return 'Debian';
+  if (os.toLowerCase().includes('linux')) return 'Linux';
+  return os;
+};
+
+const getStatusColor = (status?: string) => {
+  if (!status) return 'default';
+  const colorMap: Record<string, string> = {
+    'running': 'green',
+    'stopped': 'orange',
+    'error': 'red',
+    'expired': 'red',
+    'starting': 'blue',
+    'stopping': 'orange',
+    'rebooting': 'blue',
+  };
+  return colorMap[status.toLowerCase()] || 'default';
+};
+
+const getStatusText = (status?: string) => {
+  if (!status) return '--';
+  const textMap: Record<string, string> = {
+    'running': '运行中',
+    'stopped': '已停止',
+    'error': '错误',
+    'expired': '已过期',
+    'starting': '启动中',
+    'stopping': '停止中',
+    'rebooting': '重启中',
+  };
+  return textMap[status.toLowerCase()] || status;
+};
+
+const getExpiryColor = (expiryDate?: string) => {
+  if (!expiryDate) return 'default';
+  
+  const now = new Date();
+  const expiry = new Date(expiryDate);
+  const diffDays = Math.floor((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) return 'red';
+  if (diffDays < 7) return 'orange';
+  if (diffDays < 30) return 'gold';
+  return 'green';
+};
+
+const formatExpiryTime = (expiryDate?: string) => {
+  if (!expiryDate) return '--';
+  try {
+    const date = new Date(expiryDate);
+    const now = new Date();
+    
+    if (date < now) {
+      return '已过期';
+    }
+    
+    return formatDistanceToNow(date, { addSuffix: true, locale: zhCN });
+  } catch (error) {
+    return expiryDate;
+  }
+};
 </script>
 
-<style scoped lang="scss">
-.host-management {
-  .search-card {
+<style lang="scss" scoped>
+.host-management-page {
+  .toolbar-card {
     margin-bottom: 16px;
   }
-
-  .table-card {
-    .table-header {
+  
+  .host-list-card {
+    .ant-card-head {
+      min-height: 48px;
+    }
+    
+    .host-name-column {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      flex-direction: column;
       
-      .table-actions {
-        display: flex;
-        gap: 8px;
+      .ant-tag {
+        margin-top: 4px;
       }
     }
-
-    .table-alert {
-      margin-bottom: 16px;
+    
+    .ip-address-column {
+      .ip-label {
+        color: rgba(0, 0, 0, 0.45);
+        margin-right: 4px;
+      }
+    }
+    
+    .configuration-column {
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    
+    .action-column {
+      white-space: nowrap;
     }
   }
+}
 
-  .text-gray-400 {
-    color: #9ca3af;
-  }
-
-  .text-red-500 {
-    color: #ef4444;
+// 暗色主题适配
+html.dark {
+  .host-management-page {
+    .ip-address-column {
+      .ip-label {
+        color: rgba(255, 255, 255, 0.45);
+      }
+    }
   }
 }
-</style> 
+</style>

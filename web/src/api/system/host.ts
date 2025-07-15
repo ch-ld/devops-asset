@@ -184,6 +184,15 @@ export function batchChangeStatus(data: {
   return client.put(`${base}/hosts/batch_status`, data)
 }
 
+// 新增批量标签操作API
+export function batchUpdateTags(data: {
+  ids: number[]
+  tags: string[]
+  action: 'add' | 'remove' | 'replace'
+}) {
+  return client.put(`${base}/hosts/batch_tags`, data)
+}
+
 export function batchSSH(data: {
   ids: number[]
   cmd: string
@@ -216,6 +225,24 @@ export function getHostAlerts(days = 7) {
 
 export function getHostHistory(id: string) {
   return client.get(`${base}/hosts/history`, { params: { id } })
+}
+
+// 新增主机监控API
+export function getHostMetrics(hostId: number) {
+  return client.get(`${base}/hosts/${hostId}/metrics`)
+}
+
+export function getHostMetricsHistory(hostId: number, options?: {
+  period?: 'last_hour' | 'last_day' | 'last_week' | 'last_month'
+  startTime?: string
+  endTime?: string
+  metricType?: 'cpu' | 'memory' | 'disk' | 'network' | 'all'
+}) {
+  return client.get(`${base}/hosts/${hostId}/metrics/history`, { params: options })
+}
+
+export function getHostsOverallMetrics() {
+  return client.get(`${base}/hosts/metrics/overall`)
 }
 
 // ==============================

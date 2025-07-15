@@ -1,13 +1,22 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { Provider, Host, HostGroup } from '@/types/api/host'
+import type { Provider, Host, HostGroup, HostAlert, HostMetrics, HostMetricsHistory } from '@/types/api/host'
 import * as hostApi from '@/api/system/host'
+import { ApiResponse } from '@/api/client'
+
+interface HostListResponse {
+  data: Host[];
+  total: number;
+}
 
 export const useHostStore = defineStore('hostStore', () => {
   // State
   const providerList = ref<Provider[]>([])
   const hostList = ref<Host[]>([])
   const hostGroupTree = ref<HostGroup[]>([])
+  const hostAlerts = ref<HostAlert[]>([])
+  const hostMetrics = ref<HostMetrics | null>(null)
+  const hostMetricsHistory = ref<HostMetricsHistory | null>(null)
   const isLoading = ref(false)
   const isSubmitting = ref(false)
   const pagination = ref({
@@ -20,8 +29,8 @@ export const useHostStore = defineStore('hostStore', () => {
   const fetchProviders = async () => {
     isLoading.value = true
     try {
-      const { data } = await hostApi.getProviderList()
-      providerList.value = data
+      const response = await hostApi.getProviderList()
+      providerList.value = response as Provider[]
     } catch (error) {
       console.error('Failed to fetch providers:', error)
       throw error
@@ -86,14 +95,19 @@ export const useHostStore = defineStore('hostStore', () => {
   const fetchHostGroupTree = async () => {
     isLoading.value = true
     try {
-      const { data } = await hostApi.getHostGroupTree()
-      hostGroupTree.value = data
+      const response = await hostApi.getHostGroupTree()
+      hostGroupTree.value = response as HostGroup[]
     } catch (error) {
       console.error('Failed to fetch host group tree:', error)
       throw error
     } finally {
       isLoading.value = false
     }
+  }
+
+  // Set host group tree directly
+  const setHostGroupTree = (groups: HostGroup[]) => {
+    hostGroupTree.value = groups
   }
 
   const addHostGroup = async (group: Partial<HostGroup>) => {
@@ -159,9 +173,9 @@ export const useHostStore = defineStore('hostStore', () => {
   }) => {
     isLoading.value = true
     try {
-      const { data } = await hostApi.getHostList(params)
-      hostList.value = data.data
-      pagination.value.total = data.total
+      const response = await hostApi.getHostList(params) as ApiResponse<HostListResponse>
+      hostList.value = response.data.data
+      pagination.value.total = response.data.total
       if (params?.page) {
         pagination.value.page = params.page
       }
@@ -270,7 +284,7 @@ export const useHostStore = defineStore('hostStore', () => {
       isLoading.value = false
     }
   }
-
+  
   // Batch operations
   const batchDeleteHosts = async (ids: number[]) => {
     isSubmitting.value = true
@@ -284,14 +298,14 @@ export const useHostStore = defineStore('hostStore', () => {
       isSubmitting.value = false
     }
   }
-
+  
   const batchChangeStatus = async (ids: number[], status: string) => {
     isSubmitting.value = true
     try {
       await hostApi.batchChangeStatus({ ids, status })
       await fetchHosts()
     } catch (error) {
-      console.error('Failed to batch change status:', error)
+      console.error('Failed to batch change host status:', error)
       throw error
     } finally {
       isSubmitting.value = false
@@ -312,29 +326,118 @@ export const useHostStore = defineStore('hostStore', () => {
     }
   }
 
+  // 新增: 批量管理标签
+  const batchUpdateTags = async (
+    ids: number[],
+    tags: string[],
+    action: 'add' | 'remove' | 'replace'
+  ) => {
+    isSubmitting.value = true
+    try {
+      await hostApi.batchUpdateTags({ ids, tags, action })
+      await fetchHosts()
+    } catch (error) {
+      console.error('Failed to update tags:', error)
+      throw error
+    } finally {
+      isSubmitting.value = false
+    }
+  }
+  
+  // 新增: 批量设置过期时间
+  const batchSetExpired = async (ids: number[], expiredAt: string) => {
+    isSubmitting.value = true
+    try {
+      await hostApi.batchLifecycleHosts({ ids, expired_at: expiredAt })
+      await fetchHosts()
+    } catch (error) {
+      console.error('Failed to set expire date:', error)
+      throw error
+    } finally {
+      isSubmitting.value = false
+    }
+  }
+  
+  // 新增: 获取主机监控指标
+  const fetchHostMetrics = async (hostId: number) => {
+    isLoading.value = true
+    try {
+      const response = await hostApi.getHostMetrics(hostId) as ApiResponse<HostMetrics>
+      hostMetrics.value = response.data
+      return response.data
+    } catch (error) {
+      console.error('Failed to fetch host metrics:', error)
+      throw error
+    } finally {
+      isLoading.value = false
+    }
+  }
+  
+  // 新增: 获取主机历史监控数据
+  const fetchHostMetricsHistory = async (
+    hostId: number, 
+    options?: {
+      period?: 'last_hour' | 'last_day' | 'last_week' | 'last_month'
+      startTime?: string
+      endTime?: string
+      metricType?: 'cpu' | 'memory' | 'disk' | 'network' | 'all'
+    }
+  ) => {
+    isLoading.value = true
+    try {
+      const response = await hostApi.getHostMetricsHistory(hostId, options) as ApiResponse<HostMetricsHistory>
+      hostMetricsHistory.value = response.data
+      return response.data
+    } catch (error) {
+      console.error('Failed to fetch host metrics history:', error)
+      throw error
+    } finally {
+      isLoading.value = false
+    }
+  }
+  
+  // 新增: 获取主机告警
+  const loadHostAlerts = async (days = 7) => {
+    isLoading.value = true
+    try {
+      const response = await hostApi.getHostAlerts(days) as ApiResponse<HostAlert[]>
+      hostAlerts.value = response.data
+      return response.data
+    } catch (error) {
+      console.error('Failed to load host alerts:', error)
+      throw error
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   return {
     // State
     providerList,
     hostList,
     hostGroupTree,
+    hostAlerts,
+    hostMetrics,
+    hostMetricsHistory,
     isLoading,
     isSubmitting,
     pagination,
-    
+
     // Provider actions
     fetchProviders,
     addProvider,
     updateProvider,
     deleteProvider,
     syncProviderResources,
-    
-    // Host group actions
+
+    // Host Group actions
     fetchHostGroupTree,
+    setHostGroupTree,
     addHostGroup,
     updateHostGroup,
     deleteHostGroup,
     moveHostGroup,
-    
+
     // Host actions
     fetchHosts,
     addHost,
@@ -342,14 +445,21 @@ export const useHostStore = defineStore('hostStore', () => {
     updateHost,
     deleteHost,
     moveHost,
-    
+
     // Sync actions
     syncHosts,
     syncHostStatus,
     
-    // Batch actions
+    // Batch operations
     batchDeleteHosts,
     batchChangeStatus,
     batchImportHosts,
+    batchUpdateTags,
+    batchSetExpired,
+    
+    // Metrics and alerts
+    fetchHostMetrics,
+    fetchHostMetricsHistory,
+    loadHostAlerts
   }
 }) 
