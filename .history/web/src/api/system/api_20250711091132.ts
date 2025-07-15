@@ -1,23 +1,8 @@
 import api from '@/api/client'
 import { ApiResponse } from '@/api/client'
 
-interface CaptchaResponse {
-  id: string
-  image: string
-}
-
-export const getCaptcha = (
-  height: number,
-  width: number
-): Promise<ApiResponse<CaptchaResponse>> => {
+export const getCaptcha = (height: number, width: number): Promise<ApiResponse<ApiResponse>> => {
   return api.get({ url: '/api/v1/auth/captcha', params: { height, width } })
-}
-
-// 登录响应
-interface LoginResponse {
-  access_token: string
-  expires_at: number
-  token_type: string
 }
 
 export const userLogin = (data: {
@@ -25,34 +10,11 @@ export const userLogin = (data: {
   password: string
   captcha: string
   captcha_id: string
-}): Promise<ApiResponse<LoginResponse>> => {
+}): Promise<ApiResponse<ApiResponse>> => {
   return api.post({ url: '/api/v1/auth/login', data })
 }
 
-// 用户信息响应
-interface UserInfoResponse {
-  id: number
-  username: string
-  nickname: string
-  avatar: string
-  email: string
-  phone: string
-  role_id: number
-  department_id: number
-  status: number
-  remark: string
-  role: {
-    id: number
-    name: string
-    code: string
-  }
-  department: {
-    id: number
-    name: string
-  }
-}
-
-export const getUserInfo = (): Promise<ApiResponse<UserInfoResponse>> => {
+export const getUserInfo = (): Promise<ApiResponse<ApiResponse>> => {
   return api.get({ url: '/api/v1/users/info' })
 }
 
@@ -164,4 +126,4 @@ export const updateUser = (data: any): Promise<ApiResponse<ApiResponse>> => {
 
 export const deleteUser = (id: number): Promise<ApiResponse<ApiResponse>> => {
   return api.del({ url: `/api/v1/users/${id}` })
-}
+} 

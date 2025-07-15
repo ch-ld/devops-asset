@@ -1,32 +1,26 @@
 <template>
   <div class="login-bg-animate">
-    <svg
-      class="bg-anim-svg"
-      width="100vw"
-      height="100vh"
-      viewBox="0 0 1920 1080"
-      preserveAspectRatio="none"
-    >
+    <svg class="bg-anim-svg" width="100vw" height="100vh" viewBox="0 0 1920 1080" preserveAspectRatio="none">
       <circle cx="300" cy="300" r="40" fill="#5D87FF22">
-        <animate attributeName="r" values="40;60;40" dur="4s" repeatCount="indefinite" />
+        <animate attributeName="r" values="40;60;40" dur="4s" repeatCount="indefinite"/>
       </circle>
       <circle cx="1600" cy="200" r="30" fill="#38C0FC22">
-        <animate attributeName="r" values="30;50;30" dur="5s" repeatCount="indefinite" />
+        <animate attributeName="r" values="30;50;30" dur="5s" repeatCount="indefinite"/>
       </circle>
       <circle cx="500" cy="800" r="25" fill="#5D87FF11">
-        <animate attributeName="r" values="25;40;25" dur="6s" repeatCount="indefinite" />
+        <animate attributeName="r" values="25;40;25" dur="6s" repeatCount="indefinite"/>
       </circle>
       <line x1="300" y1="300" x2="1600" y2="200" stroke="#5D87FF33" stroke-width="2">
-        <animate attributeName="x2" values="1600;1400;1600" dur="6s" repeatCount="indefinite" />
+        <animate attributeName="x2" values="1600;1400;1600" dur="6s" repeatCount="indefinite"/>
       </line>
       <line x1="500" y1="800" x2="300" y2="300" stroke="#38C0FC33" stroke-width="2">
-        <animate attributeName="x2" values="300;400;300" dur="5s" repeatCount="indefinite" />
+        <animate attributeName="x2" values="300;400;300" dur="5s" repeatCount="indefinite"/>
       </line>
       <circle cx="1200" cy="700" r="18" fill="#38C0FC22">
-        <animate attributeName="r" values="18;32;18" dur="7s" repeatCount="indefinite" />
+        <animate attributeName="r" values="18;32;18" dur="7s" repeatCount="indefinite"/>
       </circle>
       <line x1="1200" y1="700" x2="1600" y2="200" stroke="#5D87FF22" stroke-width="2">
-        <animate attributeName="y2" values="200;300;200" dur="7s" repeatCount="indefinite" />
+        <animate attributeName="y2" values="200;300;200" dur="7s" repeatCount="indefinite"/>
       </line>
     </svg>
     <div class="login-center-card">
@@ -58,16 +52,14 @@
         <ElFormItem prop="captcha">
           <ElRow :gutter="5">
             <ElCol :span="16">
-              <ElInput placeholder="请输入验证码" size="large" v-model.trim="formData.captcha" />
+              <ElInput
+                placeholder="请输入验证码"
+                size="large"
+                v-model.trim="formData.captcha"
+              />
             </ElCol>
             <ElCol :push="1" :span="8">
-              <img
-                :src="captchaImageUrl"
-                @click="refreshCaptcha"
-                class="captcha-image"
-                alt="点击刷新验证码"
-                @error="handleCaptchaImageError"
-              />
+              <img :src="captchaImageUrl" @click="refreshCaptcha" class="captcha-image" />
             </ElCol>
           </ElRow>
         </ElFormItem>
@@ -100,16 +92,13 @@
   import AppConfig from '@/config'
   import { ElForm, ElMessage, ElNotification } from 'element-plus'
   import { useUserStore } from '@/store/modules/user'
-  // ApiStatus已不再使用，直接比较状态码
-  // import { ApiStatus } from '@/utils/http/status'
+  import { ApiStatus } from '@/utils/http/status'
   import { SystemThemeEnum } from '@/enums/appEnum'
   import { useSettingStore } from '@/store/modules/setting'
   import type { FormInstance, FormRules } from 'element-plus'
   import { onMounted, ref, reactive, computed } from 'vue'
   import { getCaptcha, userLogin, getUserInfo } from '@/api/system/api'
   import defaultAvatar from '@/assets/img/user/avatar.png'
-  import { storeToRefs } from 'pinia'
-
   defineOptions({ name: 'Login' })
   const settingStore = useSettingStore()
   const { isDark, systemThemeType } = storeToRefs(settingStore)
@@ -117,8 +106,7 @@
   const userStore = useUserStore()
   const router = useRouter()
 
-  // 定义一些未使用的变量为_开头，避免lint警告
-  const _systemName = AppConfig.systemInfo.name
+  const systemName = AppConfig.systemInfo.name
   const formRef = ref<FormInstance>()
   const formData = reactive({
     username: '',
@@ -153,31 +141,16 @@
             captcha: formData.captcha,
             captcha_id: captchaImageID.value
           })
-          // 调试查看登录响应
-          console.log('Login response:', res)
-          // 修改状态码判断为200，而非ApiStatus.success
-          if (res.code === 200 && res.data) {
+          if (res.code === ApiStatus.success && res.data) {
             // 设置 token
             userStore.setToken(res.data.access_token)
             // 获取用户信息
             const userRes = await getUserInfo()
-            console.log('User info response:', userRes)
-            // 修改状态码判断
-            if (userRes.code === 200 && userRes.data) {
+            if (userRes.code === ApiStatus.success) {
               console.log('获取用户信息成功:', userRes.data)
-
-              // 转换为UserInfo类型
-              const userInfo: Api.User.UserInfo = {
-                userId: userRes.data.id,
-                userName: userRes.data.username,
-                roles: [userRes.data.role?.code || ''],
-                buttons: [],
-                avatar: defaultAvatar,
-                email: userRes.data.email,
-                phone: userRes.data.phone
-              }
-
-              userStore.setUserInfo(userInfo)
+              // 使用导入的图片路径
+              userRes.data.avatar = defaultAvatar
+              userStore.setUserInfo(userRes.data)
             } else {
               ElMessage.error(userRes.message)
               console.error('获取用户信息失败:', userRes.message)
@@ -220,72 +193,20 @@
   // 切换主题
   import { useTheme } from '@/composables/useTheme'
 
-  // 定义但不使用，添加_前缀
-  const _toggleTheme = () => {
+  const toggleTheme = () => {
     let { LIGHT, DARK } = SystemThemeEnum
     useTheme().switchThemeStyles(systemThemeType.value === LIGHT ? DARK : LIGHT)
   }
 
   const refreshCaptcha = async () => {
     try {
-      const captchaRes = await getCaptcha(80, 240)
-      // 调试检查响应格式
-      console.log('Captcha response:', captchaRes)
-
-      // 全面检查各种可能的响应格式
-      if (captchaRes) {
-        if (captchaRes.code === 200 && captchaRes.data) {
-          // 正常格式
-          if (captchaRes.data.image && captchaRes.data.id) {
-            captchaImageUrl.value = captchaRes.data.image
-            captchaImageID.value = captchaRes.data.id
-            console.log('验证码加载成功(标准格式):', {
-              id: captchaImageID.value,
-              imageLength: captchaImageUrl.value?.length
-            })
-            return
-          }
-
-          // 处理响应中直接包含image和id的情况
-          if (typeof captchaRes.data === 'object') {
-            const { id, image } = captchaRes.data as { id?: string; image?: string }
-            if (id && image) {
-              captchaImageUrl.value = image
-              captchaImageID.value = id
-              console.log('验证码加载成功(直接包含):', { id, imageLength: image.length })
-              return
-            }
-          }
-        }
-
-        // 尝试在外层查找id和image
-        // 使用类型断言避免类型错误
-        const anyResponse = captchaRes as any
-        if (anyResponse.image && anyResponse.id) {
-          captchaImageUrl.value = anyResponse.image
-          captchaImageID.value = anyResponse.id
-          console.log('验证码加载成功(外层数据):', { id: anyResponse.id })
-          return
-        }
-      }
-
-      // 如果所有格式都不匹配
-      console.error('验证码响应格式无法识别:', captchaRes)
-      ElMessage.error('验证码格式错误')
+      const captchaData = await getCaptcha(80, 240)
+      captchaImageUrl.value = captchaData.data.image
+      captchaImageID.value = captchaData.data.id
     } catch (error) {
       console.error('Error refreshing captcha:', error)
       ElMessage.error('验证码获取失败')
     }
-  }
-
-  // 验证码图片加载错误处理
-  const handleCaptchaImageError = () => {
-    console.error('验证码图片加载失败')
-    ElMessage.error('验证码图片加载失败')
-    // 尝试重新获取验证码
-    setTimeout(() => {
-      refreshCaptcha()
-    }, 1000)
   }
 
   onMounted(() => {

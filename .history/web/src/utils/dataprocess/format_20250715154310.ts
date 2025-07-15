@@ -52,7 +52,7 @@ export function formatJsonData(jsonData: string | object, indentation: number = 
 
     // 再将对象转换为格式化的字符串
     return JSON.stringify(obj, null, indentation)
-  } catch {
+  } catch (_) {
     // 如果解析失败，返回原始字符串
     return typeof jsonData === 'string' ? jsonData : JSON.stringify(jsonData)
   }

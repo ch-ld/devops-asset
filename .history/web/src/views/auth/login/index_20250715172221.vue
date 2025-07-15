@@ -61,13 +61,7 @@
               <ElInput placeholder="请输入验证码" size="large" v-model.trim="formData.captcha" />
             </ElCol>
             <ElCol :push="1" :span="8">
-              <img
-                :src="captchaImageUrl"
-                @click="refreshCaptcha"
-                class="captcha-image"
-                alt="点击刷新验证码"
-                @error="handleCaptchaImageError"
-              />
+              <img :src="captchaImageUrl" @click="refreshCaptcha" class="captcha-image" />
             </ElCol>
           </ElRow>
         </ElFormItem>
@@ -248,7 +242,7 @@
 
           // 处理响应中直接包含image和id的情况
           if (typeof captchaRes.data === 'object') {
-            const { id, image } = captchaRes.data as { id?: string; image?: string }
+            const { id, image } = captchaRes.data
             if (id && image) {
               captchaImageUrl.value = image
               captchaImageID.value = id
@@ -259,12 +253,10 @@
         }
 
         // 尝试在外层查找id和image
-        // 使用类型断言避免类型错误
-        const anyResponse = captchaRes as any
-        if (anyResponse.image && anyResponse.id) {
-          captchaImageUrl.value = anyResponse.image
-          captchaImageID.value = anyResponse.id
-          console.log('验证码加载成功(外层数据):', { id: anyResponse.id })
+        if (captchaRes.image && captchaRes.id) {
+          captchaImageUrl.value = captchaRes.image
+          captchaImageID.value = captchaRes.id
+          console.log('验证码加载成功(外层数据):', { id: captchaRes.id })
           return
         }
       }
@@ -276,16 +268,6 @@
       console.error('Error refreshing captcha:', error)
       ElMessage.error('验证码获取失败')
     }
-  }
-
-  // 验证码图片加载错误处理
-  const handleCaptchaImageError = () => {
-    console.error('验证码图片加载失败')
-    ElMessage.error('验证码图片加载失败')
-    // 尝试重新获取验证码
-    setTimeout(() => {
-      refreshCaptcha()
-    }, 1000)
   }
 
   onMounted(() => {

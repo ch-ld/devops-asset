@@ -542,7 +542,7 @@
 
   // 查看主机详情
   const viewHostDetail = (id: number) => {
-    router.push(`/cmdb/host/${id}`)
+    router.push(`/cmdb/host/detail/${id}`)
   }
 
   // 编辑主机

@@ -61,13 +61,7 @@
               <ElInput placeholder="请输入验证码" size="large" v-model.trim="formData.captcha" />
             </ElCol>
             <ElCol :push="1" :span="8">
-              <img
-                :src="captchaImageUrl"
-                @click="refreshCaptcha"
-                class="captcha-image"
-                alt="点击刷新验证码"
-                @error="handleCaptchaImageError"
-              />
+              <img :src="captchaImageUrl" @click="refreshCaptcha" class="captcha-image" />
             </ElCol>
           </ElRow>
         </ElFormItem>
@@ -100,8 +94,7 @@
   import AppConfig from '@/config'
   import { ElForm, ElMessage, ElNotification } from 'element-plus'
   import { useUserStore } from '@/store/modules/user'
-  // ApiStatus已不再使用，直接比较状态码
-  // import { ApiStatus } from '@/utils/http/status'
+  import { ApiStatus } from '@/utils/http/status'
   import { SystemThemeEnum } from '@/enums/appEnum'
   import { useSettingStore } from '@/store/modules/setting'
   import type { FormInstance, FormRules } from 'element-plus'
@@ -161,9 +154,7 @@
             userStore.setToken(res.data.access_token)
             // 获取用户信息
             const userRes = await getUserInfo()
-            console.log('User info response:', userRes)
-            // 修改状态码判断
-            if (userRes.code === 200 && userRes.data) {
+            if (userRes.code === ApiStatus.success && userRes.data) {
               console.log('获取用户信息成功:', userRes.data)
 
               // 转换为UserInfo类型
@@ -231,61 +222,22 @@
       const captchaRes = await getCaptcha(80, 240)
       // 调试检查响应格式
       console.log('Captcha response:', captchaRes)
-
-      // 全面检查各种可能的响应格式
-      if (captchaRes) {
-        if (captchaRes.code === 200 && captchaRes.data) {
-          // 正常格式
-          if (captchaRes.data.image && captchaRes.data.id) {
-            captchaImageUrl.value = captchaRes.data.image
-            captchaImageID.value = captchaRes.data.id
-            console.log('验证码加载成功(标准格式):', {
-              id: captchaImageID.value,
-              imageLength: captchaImageUrl.value?.length
-            })
-            return
-          }
-
-          // 处理响应中直接包含image和id的情况
-          if (typeof captchaRes.data === 'object') {
-            const { id, image } = captchaRes.data as { id?: string; image?: string }
-            if (id && image) {
-              captchaImageUrl.value = image
-              captchaImageID.value = id
-              console.log('验证码加载成功(直接包含):', { id, imageLength: image.length })
-              return
-            }
-          }
-        }
-
-        // 尝试在外层查找id和image
-        // 使用类型断言避免类型错误
-        const anyResponse = captchaRes as any
-        if (anyResponse.image && anyResponse.id) {
-          captchaImageUrl.value = anyResponse.image
-          captchaImageID.value = anyResponse.id
-          console.log('验证码加载成功(外层数据):', { id: anyResponse.id })
-          return
-        }
+      // 这里需要修改，后端API状态码为200而不是20000
+      if (captchaRes.code === 200 && captchaRes.data) {
+        captchaImageUrl.value = captchaRes.data.image
+        captchaImageID.value = captchaRes.data.id
+        console.log('验证码加载成功:', {
+          id: captchaImageID.value,
+          imageLength: captchaImageUrl.value?.length
+        })
+      } else {
+        console.error('Invalid captcha response format:', captchaRes)
+        ElMessage.error('验证码格式错误')
       }
-
-      // 如果所有格式都不匹配
-      console.error('验证码响应格式无法识别:', captchaRes)
-      ElMessage.error('验证码格式错误')
     } catch (error) {
       console.error('Error refreshing captcha:', error)
       ElMessage.error('验证码获取失败')
     }
-  }
-
-  // 验证码图片加载错误处理
-  const handleCaptchaImageError = () => {
-    console.error('验证码图片加载失败')
-    ElMessage.error('验证码图片加载失败')
-    // 尝试重新获取验证码
-    setTimeout(() => {
-      refreshCaptcha()
-    }, 1000)
   }
 
   onMounted(() => {

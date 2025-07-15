@@ -37,82 +37,58 @@ export const asyncRoutes: AppRouteRecord[] = [
       }
     ]
   },
-  // 添加CMDB主机管理模块
   {
     id: 2,
     name: 'CMDB',
     path: '/cmdb',
     component: RoutesAlias.Home,
     meta: {
-      title: '资产管理',
-      icon: '&#xe73e;', // 服务器图标
+      title: '资源管理',
+      icon: '&#xe67e;',
       keepAlive: false,
-      roles: ['超级管理员', '管理员', '运维人员']
+      roles: ['超级管理员', '管理员', '运维']
     },
     children: [
       {
         id: 201,
-        path: 'hosts',
-        name: 'HostManagement',
-        component: '/cmdb/host/index',
+        path: 'host',
+        name: 'HostList',
+        component: () => import('@/views/cmdb/host/index.vue'),
         meta: {
           title: '主机管理',
           keepAlive: true,
-          roles: ['超级管理员', '管理员', '运维人员']
+          roles: ['超级管理员', '管理员', '运维']
         }
       },
       {
         id: 202,
-        path: 'host/:id',
-        name: 'HostDetail',
-        component: '/cmdb/host/detail',
+        path: 'host/dashboard',
+        name: 'HostDashboard',
+        component: () => import('@/views/cmdb/host/Dashboard.vue'),
         meta: {
-          title: '主机详情',
-          hidden: true,
+          title: '主机概览',
           keepAlive: false,
-          roles: ['超级管理员', '管理员', '运维人员']
+          hideInMenu: true,
+          roles: ['超级管理员', '管理员', '运维']
         }
       },
       {
         id: 203,
-        path: 'host-edit/:id',
-        name: 'HostEdit',
-        component: '/cmdb/host/edit',
+        path: 'host/detail/:id',
+        name: 'HostDetail',
+        component: () => import('@/views/cmdb/host/HostDetail.vue'),
         meta: {
-          title: '编辑主机',
-          hidden: true,
+          title: '主机详情',
           keepAlive: false,
-          roles: ['超级管理员', '管理员', '运维人员']
+          hideInMenu: true,
+          roles: ['超级管理员', '管理员', '运维']
         }
       },
       {
         id: 204,
-        path: 'host-create',
-        name: 'HostCreate',
-        component: '/cmdb/host/edit',
-        meta: {
-          title: '添加主机',
-          hidden: true,
-          keepAlive: false,
-          roles: ['超级管理员', '管理员', '运维人员']
-        }
-      },
-      {
-        id: 205,
-        path: 'host-dashboard',
-        name: 'HostDashboard',
-        component: '/cmdb/host/Dashboard',
-        meta: {
-          title: '主机概览',
-          keepAlive: true,
-          roles: ['超级管理员', '管理员', '运维人员']
-        }
-      },
-      {
-        id: 206,
-        path: 'providers',
-        name: 'ProviderManagement',
-        component: '/cmdb/provider/index',
+        path: 'provider',
+        name: 'ProviderList',
+        component: () => import('@/views/cmdb/provider/index.vue'),
         meta: {
           title: '云账号管理',
           keepAlive: true,

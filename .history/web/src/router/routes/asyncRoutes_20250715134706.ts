@@ -101,7 +101,7 @@ export const asyncRoutes: AppRouteRecord[] = [
         id: 205,
         path: 'host-dashboard',
         name: 'HostDashboard',
-        component: '/cmdb/host/Dashboard',
+        component: '/cmdb/host/dashboard',
         meta: {
           title: '主机概览',
           keepAlive: true,
