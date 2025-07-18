@@ -1,0 +1,187 @@
+# 主机管理模块
+
+## 路由说明
+
+主机管理模块的路由由后端动态生成，前端路由配置在 `web/src/router/routes/asyncRoutes.ts` 中。主要路由包括：
+
+- `/cmdb/hosts` - 主机列表页面
+- `/cmdb/host/:id` - 主机详情页面
+- `/cmdb/host-edit/:id` - 编辑主机页面
+- `/cmdb/host-create` - 创建主机页面
+- `/cmdb/host-dashboard` - 主机概览页面
+
+## API 接口
+
+主机管理模块的 API 接口前缀为 `/api/v1/cmdb`，主要接口包括：
+
+### 主机管理
+
+- `GET /api/v1/cmdb/hosts` - 获取主机列表
+- `GET /api/v1/cmdb/hosts/:id` - 获取主机详情
+- `POST /api/v1/cmdb/hosts` - 创建主机
+- `PUT /api/v1/cmdb/hosts/:id` - 更新主机
+- `DELETE /api/v1/cmdb/hosts/:id` - 删除主机
+- `POST /api/v1/cmdb/hosts/manual` - 手动添加主机
+- `POST /api/v1/cmdb/hosts/:id/move` - 移动主机到指定主机组
+
+### 主机同步
+
+- `POST /api/v1/cmdb/hosts/sync` - 同步主机
+- `POST /api/v1/cmdb/hosts/:id/sync_status` - 同步主机状态
+
+### 批量操作
+
+- `POST /api/v1/cmdb/hosts/batch_import` - 批量导入主机
+- `GET /api/v1/cmdb/hosts/batch_export` - 批量导出主机
+- `DELETE /api/v1/cmdb/hosts/batch_delete` - 批量删除主机
+- `POST /api/v1/cmdb/hosts/batch_move` - 批量移动主机
+- `POST /api/v1/cmdb/hosts/batch_tags` - 批量设置标签
+
+## 修复记录
+
+### 2023-07-16 修复
+
+1. **后端验证码问题**
+   - 修复了 `CaptchaStore` 结构体中 `memoryStore` 字段的类型，从 `*base64Captcha.MemoryStore` 改为 `base64Captcha.Store`
+   - 修改了 `NewCaptchaStore` 函数中 `base64Captcha.NewMemoryStore` 的调用，添加了缺失的过期时间参数
+
+2. **前端依赖问题**
+   - 修复了 `date-fns` 依赖问题，使用 `dayjs` 替代
+   - 配置了 `dayjs` 的语言和插件，确保时间格式化正确
+
+3. **API 调用问题**
+   - 修复了 API 路径，确保与后端路由一致
+   - 修改了导出功能，确保正确处理 blob 类型
+   - 修复了 API 响应处理方式
+
+4. **UI 组件问题**
+   - 将 `@ant-design/icons-vue` 导入替换为 `@element-plus/icons-vue`
+   - 修改了图标组件名称，确保与 Element Plus 兼容
+   - 将 Ant Design Vue 组件替换为 Element Plus 组件
+   - 修复了组件属性传递问题，确保必要的 props 被正确传递
+
+5. **加载状态问题**
+   - 将 `ElMessage.loading` 替换为 `ElLoading.service()`，修复加载状态显示问题
+
+6. **类型错误**
+   - 删除了 TypeScript 类型定义，使用 JavaScript 语法
+   - 修复了类型错误和未定义变量
+
+### 2023-07-17 修复
+
+1. **终端组件问题**
+   - 暂时移除了 `TerminalWindow.vue` 中的 xterm 相关功能，使用简单的占位符替代
+   - 原因是 xterm 相关依赖（`xterm-addon-web-links`、`xterm-addon-search`、`xterm-addon-unicode11` 等）无法正确导入
+   - 将 Ant Design Vue 组件替换为 Element Plus 组件
+   - 修复了图标导入和组件属性传递问题
+
+2. **主机模态框问题**
+   - 修复了 `HostModal.vue` 中的 TypeScript 语法错误
+   - 将组件从 TypeScript 转换为 JavaScript，移除了类型注解
+   - 修复了 `defineEmits` 语法错误，将 `update:modelValue` 改为 `update:visible`
+   - 使用 `require` 替代 `import` 导入 Ant Design 图标
+
+3. **主机列表页面问题**
+   - 发现主机列表页面（index.vue）存在图标导入问题
+   - 需要将 Ant Design 图标替换为 Element Plus 图标
+   - 页面存在多个 TypeScript 类型错误，需要转换为 JavaScript 或修复类型定义
+
+## 已知问题
+
+1. **SftpWindow.vue**
+   - 有一些未使用的变量和函数，如 `columns`、`handleExpand` 等
+   - 可能需要进一步调整组件样式，确保与 Element Plus 风格一致
+
+2. **HostModal.vue**
+   - 仍然使用 Ant Design Vue 组件，需要完全转换为 Element Plus 组件
+   - 当前只是修复了语法错误，但组件可能无法正常工作
+   - 需要重构表单、标签页、选择器等组件
+   - 日期选择器需要使用 Element Plus 的 `el-date-picker` 替代
+
+3. **其他组件**
+   - 可能还有其他组件使用了 Ant Design Vue，需要进一步检查和修复
+
+4. **TerminalWindow.vue**
+   - 终端功能暂时被禁用，使用占位符替代
+   - 未来需要重新实现终端功能，可以考虑使用以下方案：
+     - 安装 `@xterm/xterm` 及相关插件（`@xterm/addon-fit`、`@xterm/addon-web-links` 等）
+     - 或者使用其他终端库，如 `vue-terminal`、`vue-xterm` 等
+     - 或者使用 iframe 嵌入后端提供的终端页面
+
+5. **HostModal.vue**
+   - 仍然使用 Ant Design Vue 组件，需要完全转换为 Element Plus 组件
+   - 当前只是修复了语法错误，但组件可能无法正常工作
+   - 需要重构表单、标签页、选择器等组件
+   - 日期选择器需要使用 Element Plus 的 `el-date-picker` 替代
+
+6. **主机列表页面（index.vue）**
+   - 仍然使用 Ant Design Vue 组件，需要完全转换为 Element Plus 组件
+   - 存在图标导入问题，需要将所有 Ant Design 图标替换为 Element Plus 图标
+   - 需要修复 TypeScript 类型错误或将文件转换为 JavaScript
+   - 需要替换 `a-table`、`a-card`、`a-dropdown` 等组件为 Element Plus 对应组件
+
+## 解决方案
+
+为了解决主机列表页面的问题，建议采取以下步骤：
+
+1. 创建一个新的分支，专门用于将 Ant Design Vue 组件迁移到 Element Plus
+2. 逐个组件进行迁移，确保功能和样式保持一致
+3. 修复所有 TypeScript 类型错误
+4. 测试所有功能，确保迁移后的组件正常工作
+5. 合并分支到主分支
+
+## 注意事项
+
+1. 项目使用 Element Plus 而非 Ant Design Vue，但部分组件仍使用了 Ant Design 的命名和样式。
+2. 时间格式化统一使用 dayjs，确保一致的日期时间格式。
+3. API 响应格式为 `{ code: number, status: string, message: string, data: T, timestamp: number, count: number }`。
+4. 主机模块依赖于主机组数据，确保先加载主机组数据再操作主机。
+5. 动态路由由后端生成，前端需要确保路由组件路径正确。 
+
+# 主机管理模块修复记录
+
+## 问题描述
+
+主机管理模块存在多个问题，包括：
+
+1. TypeScript 语法错误：在 `index.vue` 中存在 TypeScript 相关的语法错误。
+2. 组件兼容性问题：存在 Ant Design Vue 与 Element Plus 混用的情况。
+3. 路由配置问题：路由配置不正确，导致页面无法正常加载。
+
+## 修复过程
+
+### 1. TypeScript 语法错误修复
+
+- 将 `index.vue` 中的 TypeScript 类型注解移除，转换为普通 JavaScript。
+- 修改了类型定义，如 `ref<number[]>([])` 改为 `ref([])`。
+- 移除了函数参数的类型注解。
+
+### 2. 组件兼容性问题
+
+- 创建了 `simple-index.vue` 作为纯 Element Plus 版本的主机管理页面。
+- 确保所有组件使用 Element Plus 风格，避免与 Ant Design Vue 混用。
+
+### 3. 路由配置修复
+
+- 修改了 `asyncRoutes.ts` 中的路由配置，确保使用正确的组件路径。
+- 将主机管理页面的路由指向 `simple-index.vue` 而不是 `index.vue`。
+- 添加了公告管理的路由配置，用于测试和参考。
+
+## 当前状态
+
+- 主机管理页面现在可以通过 `/cmdb/hosts` 路径访问。
+- 使用的是纯 Element Plus 组件的 `simple-index.vue`。
+- 后续可能需要完全迁移到 Element Plus 或者完全使用 Ant Design Vue，避免混用。
+
+## 后续工作
+
+1. 完善主机详情、编辑等功能页面。
+2. 统一组件库的使用，避免混用不同的 UI 框架。
+3. 优化页面性能和用户体验。
+4. 完善错误处理和异常情况的提示。
+
+## 注意事项
+
+- 本项目的路由是由后端动态生成的，前端通过 `registerDynamicRoutes` 函数注册。
+- 组件路径需要以 `/` 开头，如 `/cmdb/host/simple-index`。
+- 确保组件文件存在且路径正确，否则会导致路由无法正常加载。 
