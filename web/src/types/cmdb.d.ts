@@ -2,10 +2,11 @@ export interface Provider {
   id: number;
   name: string;
   type: 'aliyun' | 'tencent' | 'aws';
-  access_key_id: string;
-  access_key_secret: string;
-  status: boolean;
-  remark: string;
+  access_key: string;
+  secret_key: string;
+  region: string;
+  description: string;
+  status: 'enabled' | 'disabled';
   created_at: string;
   updated_at: string;
-} 
+}

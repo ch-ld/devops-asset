@@ -4,7 +4,7 @@ import type { Provider } from '@/types/cmdb';
 
 const anntApi = {
   ProviderList: '/cmdb/providers',
-  ProviderDetail: '/cmdb/provider',
+  ProviderDetail: '/cmdb/providers',
 };
 
 export function listProviders(params?: any): Promise<ApiResponse<Provider[]>> {

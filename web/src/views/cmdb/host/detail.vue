@@ -1,832 +1,854 @@
 <template>
-  <div class="host-detail-container">
-    <a-spin :spinning="loading">
-      <a-page-header :title="host.name" :subtitle="host.instance_id" @back="goBack">
-        <template #tags>
-          <a-tag :color="getStatusColor(host.status)">{{ getStatusText(host.status) }}</a-tag>
-          <a-tag v-if="host.provider_type" color="blue">{{ host.provider_type }}</a-tag>
-        </template>
-        <template #extra>
-          <a-space>
-            <a-button @click="refreshHostData">
-              <template #icon><ReloadOutlined /></template>
-              刷新
-            </a-button>
-            <a-button type="primary" @click="editHost">
-              <template #icon><EditOutlined /></template>
-              编辑
-            </a-button>
-            <a-dropdown>
-              <a-button>
-                更多操作
-                <template #icon><DownOutlined /></template>
-              </a-button>
-              <template #overlay>
-                <a-menu @click="handleMenuClick">
-                  <a-menu-item key="ssh">
-                    <template #icon><CodeOutlined /></template>
-                    打开终端
-                  </a-menu-item>
-                  <a-menu-item key="sftp">
-                    <template #icon><FolderOpenOutlined /></template>
-                    文件管理
-                  </a-menu-item>
-                  <a-menu-item key="sync">
-                    <template #icon><SyncOutlined /></template>
-                    同步状态
-                  </a-menu-item>
-                  <a-menu-item key="restart">
-                    <template #icon><PoweroffOutlined /></template>
-                    重启主机
-                  </a-menu-item>
-                  <a-menu-item key="delete">
-                    <template #icon><DeleteOutlined /></template>
-                    删除
-                  </a-menu-item>
-                </a-menu>
-              </template>
-            </a-dropdown>
-          </a-space>
-        </template>
-      </a-page-header>
+  <div class="host-detail-page">
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <div class="header-left">
+        <el-button @click="goBack" text>
+          <el-icon><ArrowLeft /></el-icon>
+          返回
+        </el-button>
+        <div class="host-title">
+          <h1>{{ host.name }}</h1>
+          <p class="instance-id">{{ host.instance_id }}</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-tags">
+          <el-tag :type="getStatusTagType(host.status)" size="large" class="status-tag">
+            <el-icon class="status-icon">
+              <component :is="getStatusIcon(host.status)" />
+            </el-icon>
+            {{ getStatusText(host.status) }}
+          </el-tag>
+          <el-tag v-if="host.provider_type" :type="getProviderTagType(host.provider_type)" size="large">
+            {{ getProviderDisplayName(host.provider_type) }}
+          </el-tag>
+        </div>
+        <div class="action-buttons">
+          <el-button @click="refreshHostData" :loading="loading">
+            <el-icon><Refresh /></el-icon>
+            刷新
+          </el-button>
+          <el-button type="primary" @click="editHost">
+            <el-icon><Edit /></el-icon>
+            编辑
+          </el-button>
+          <el-dropdown @command="handleMenuClick" trigger="click">
+            <el-button>
+              更多操作
+              <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="ssh">
+                  <el-icon><Monitor /></el-icon>
+                  打开终端
+                </el-dropdown-item>
+                <el-dropdown-item command="sftp">
+                  <el-icon><FolderOpened /></el-icon>
+                  文件管理
+                </el-dropdown-item>
+                <el-dropdown-item command="sync">
+                  <el-icon><Refresh /></el-icon>
+                  同步状态
+                </el-dropdown-item>
+                <el-dropdown-item command="restart" divided>
+                  <el-icon><SwitchButton /></el-icon>
+                  重启主机
+                </el-dropdown-item>
+                <el-dropdown-item command="delete">
+                  <el-icon><Delete /></el-icon>
+                  删除
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+      </div>
+    </div>
 
-      <a-row :gutter="16" class="detail-content">
-        <!-- 主机基本信息 -->
-        <a-col :span="16">
-          <a-card title="基本信息" :bordered="false">
-            <a-descriptions :column="2" bordered>
-              <a-descriptions-item label="主机名称">{{ host.name }}</a-descriptions-item>
-              <a-descriptions-item label="实例ID">{{ host.instance_id }}</a-descriptions-item>
-              <a-descriptions-item label="状态">
-                <a-tag :color="getStatusColor(host.status)">{{ getStatusText(host.status) }}</a-tag>
-              </a-descriptions-item>
-              <a-descriptions-item label="地区">{{ host.region || '未知' }}</a-descriptions-item>
-              <a-descriptions-item label="操作系统">{{ host.os || '未知' }}</a-descriptions-item>
-              <a-descriptions-item label="资源类型">{{
-                host.resource_type || '未知'
-              }}</a-descriptions-item>
-              <a-descriptions-item label="CPU">
-                {{ host.configuration?.cpu_cores || '未知' }} 核
-              </a-descriptions-item>
-              <a-descriptions-item label="内存">
-                {{ formatMemorySize(host.configuration?.memory_size) }}
-              </a-descriptions-item>
-              <a-descriptions-item label="公网IP">
-                <div v-if="host.public_ip && host.public_ip.length">
-                  <a-tag v-for="(ip, index) in host.public_ip" :key="index" color="green">
-                    {{ ip }}
-                  </a-tag>
-                </div>
-                <span v-else>无</span>
-              </a-descriptions-item>
-              <a-descriptions-item label="内网IP">
-                <div v-if="host.private_ip && host.private_ip.length">
-                  <a-tag v-for="(ip, index) in host.private_ip" :key="index" color="blue">
-                    {{ ip }}
-                  </a-tag>
-                </div>
-                <span v-else>无</span>
-              </a-descriptions-item>
-              <a-descriptions-item label="到期时间" :span="2">
-                <a-tag v-if="host.expired_at" :color="getExpiryColor(host.expired_at)">
-                  {{ formatExpiryTime(host.expired_at) }}
-                </a-tag>
-                <span v-else>无</span>
-              </a-descriptions-item>
-              <a-descriptions-item label="备注" :span="2">
-                {{ host.remark || '无备注' }}
-              </a-descriptions-item>
-            </a-descriptions>
-          </a-card>
-
-          <!-- 监控信息 -->
-          <a-card title="监控信息" :bordered="false" class="metrics-card">
-            <a-space direction="vertical" style="width: 100%">
-              <!-- CPU使用率 -->
-              <div class="metric-item">
-                <div class="metric-header">
-                  <span class="metric-title">CPU使用率</span>
-                  <span class="metric-value">{{
-                    metrics.cpu_usage ? (metrics.cpu_usage * 100).toFixed(2) + '%' : '未知'
-                  }}</span>
-                </div>
-                <a-progress
-                  :percent="metrics.cpu_usage ? metrics.cpu_usage * 100 : 0"
-                  :status="metrics.cpu_usage && metrics.cpu_usage > 0.9 ? 'exception' : 'normal'"
-                />
+    <!-- 主要内容区域 -->
+    <div class="main-content" v-loading="loading">
+      <el-row :gutter="24">
+        <!-- 左侧信息面板 -->
+        <el-col :lg="16" :md="24">
+          <!-- 基本信息卡片 -->
+          <el-card class="info-card" shadow="never">
+            <template #header>
+              <div class="card-header">
+                <h3>基本信息</h3>
+                <el-button size="small" text @click="editHost">
+                  <el-icon><Edit /></el-icon>
+                  编辑
+                </el-button>
               </div>
-
-              <!-- 内存使用率 -->
-              <div class="metric-item">
-                <div class="metric-header">
-                  <span class="metric-title">内存使用率</span>
-                  <span class="metric-value">{{
-                    metrics.memory_usage ? (metrics.memory_usage * 100).toFixed(2) + '%' : '未知'
-                  }}</span>
-                </div>
-                <a-progress
-                  :percent="metrics.memory_usage ? metrics.memory_usage * 100 : 0"
-                  :status="
-                    metrics.memory_usage && metrics.memory_usage > 0.9 ? 'exception' : 'normal'
-                  "
-                />
+            </template>
+            
+            <div class="info-grid">
+              <div class="info-item">
+                <label>主机名称</label>
+                <span>{{ host.name }}</span>
               </div>
-
-              <!-- 磁盘使用率 -->
-              <div class="metric-item">
-                <div class="metric-header">
-                  <span class="metric-title">磁盘使用率</span>
-                  <span class="metric-value">{{
-                    metrics.disk_usage ? (metrics.disk_usage * 100).toFixed(2) + '%' : '未知'
-                  }}</span>
-                </div>
-                <a-progress
-                  :percent="metrics.disk_usage ? metrics.disk_usage * 100 : 0"
-                  :status="metrics.disk_usage && metrics.disk_usage > 0.9 ? 'exception' : 'normal'"
-                />
+              <div class="info-item">
+                <label>实例ID</label>
+                <span class="instance-id">{{ host.instance_id }}</span>
               </div>
-            </a-space>
-          </a-card>
-        </a-col>
+              <div class="info-item">
+                <label>状态</label>
+                <el-tag :type="getStatusTagType(host.status)">
+                  <el-icon><component :is="getStatusIcon(host.status)" /></el-icon>
+                  {{ getStatusText(host.status) }}
+                </el-tag>
+              </div>
+              <div class="info-item">
+                <label>云提供商</label>
+                <el-tag :type="getProviderTagType(host.provider_type)">
+                  {{ getProviderDisplayName(host.provider_type) }}
+                </el-tag>
+              </div>
+              <div class="info-item">
+                <label>资源类型</label>
+                <span>{{ host.resource_type?.toUpperCase() || '-' }}</span>
+              </div>
+              <div class="info-item">
+                <label>地区</label>
+                <span>{{ host.region || '-' }}</span>
+              </div>
+              <div class="info-item">
+                <label>操作系统</label>
+                <span>{{ host.os || '-' }}</span>
+              </div>
+              <div class="info-item">
+                <label>主机组</label>
+                <span>{{ host.group?.name || '未分组' }}</span>
+              </div>
+              <div class="info-item">
+                <label>创建时间</label>
+                <span>{{ formatDateTime(host.created_at) }}</span>
+              </div>
+              <div class="info-item">
+                <label>更新时间</label>
+                <span>{{ formatDateTime(host.updated_at) }}</span>
+              </div>
+              <div v-if="host.expired_at" class="info-item">
+                <label>过期时间</label>
+                <span :class="{ 'expired': isExpired(host.expired_at), 'expiring': isExpiring(host.expired_at) }">
+                  {{ formatDateTime(host.expired_at) }}
+                  <el-tag v-if="isExpiring(host.expired_at)" type="warning" size="small">即将过期</el-tag>
+                  <el-tag v-if="isExpired(host.expired_at)" type="danger" size="small">已过期</el-tag>
+                </span>
+              </div>
+            </div>
+          </el-card>
 
-        <!-- 侧边信息 -->
-        <a-col :span="8">
-          <!-- 快速操作 -->
-          <a-card title="快速操作" :bordered="false" class="action-card">
+          <!-- 网络信息卡片 -->
+          <el-card class="info-card" shadow="never">
+            <template #header>
+              <div class="card-header">
+                <h3>网络信息</h3>
+              </div>
+            </template>
+            
+            <div class="network-info">
+              <div v-if="host.public_ip && host.public_ip.length > 0" class="ip-section">
+                <h4>公网IP地址</h4>
+                <div class="ip-list">
+                  <div v-for="ip in host.public_ip" :key="ip" class="ip-item">
+                    <el-tag type="success" size="small">{{ ip }}</el-tag>
+                    <el-button size="small" text @click="copyToClipboard(ip)">
+                      <el-icon><CopyDocument /></el-icon>
+                    </el-button>
+                  </div>
+                </div>
+              </div>
+              
+              <div v-if="host.private_ip && host.private_ip.length > 0" class="ip-section">
+                <h4>私网IP地址</h4>
+                <div class="ip-list">
+                  <div v-for="ip in host.private_ip" :key="ip" class="ip-item">
+                    <el-tag type="info" size="small">{{ ip }}</el-tag>
+                    <el-button size="small" text @click="copyToClipboard(ip)">
+                      <el-icon><CopyDocument /></el-icon>
+                    </el-button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </el-card>
+
+          <!-- 配置信息卡片 -->
+          <el-card v-if="host.configuration" class="info-card" shadow="never">
+            <template #header>
+              <div class="card-header">
+                <h3>配置信息</h3>
+              </div>
+            </template>
+            
+            <div class="config-info">
+              <div class="config-grid">
+                <div v-if="host.configuration.cpu_cores" class="config-item">
+                  <div class="config-icon">
+                    <el-icon><Cpu /></el-icon>
+                  </div>
+                  <div class="config-details">
+                    <span class="config-label">CPU核心</span>
+                    <span class="config-value">{{ host.configuration.cpu_cores }} 核</span>
+                  </div>
+                </div>
+                
+                <div v-if="host.configuration.memory_size" class="config-item">
+                  <div class="config-icon">
+                    <el-icon><MemoryCard /></el-icon>
+                  </div>
+                  <div class="config-details">
+                    <span class="config-label">内存大小</span>
+                    <span class="config-value">{{ formatMemory(host.configuration.memory_size) }}</span>
+                  </div>
+                </div>
+                
+                <div v-if="host.configuration.disk_size" class="config-item">
+                  <div class="config-icon">
+                    <el-icon><Coin /></el-icon>
+                  </div>
+                  <div class="config-details">
+                    <span class="config-label">磁盘大小</span>
+                    <span class="config-value">{{ host.configuration.disk_size }} GB</span>
+                  </div>
+                </div>
+                
+                <div v-if="host.configuration.instance_type" class="config-item">
+                  <div class="config-icon">
+                    <el-icon><Monitor /></el-icon>
+                  </div>
+                  <div class="config-details">
+                    <span class="config-label">实例类型</span>
+                    <span class="config-value">{{ host.configuration.instance_type }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+
+        <!-- 右侧操作面板 -->
+        <el-col :lg="8" :md="24">
+          <!-- 快速操作卡片 -->
+          <el-card class="action-card" shadow="never">
+            <template #header>
+              <h3>快速操作</h3>
+            </template>
+            
             <div class="quick-actions">
-              <a-button type="primary" block @click="openTerminal">
-                <template #icon><CodeOutlined /></template>
-                打开终端
-              </a-button>
-              <a-button block @click="openSftp">
-                <template #icon><FolderOpenOutlined /></template>
-                文件管理
-              </a-button>
-              <a-button block @click="syncHostStatus">
-                <template #icon><SyncOutlined /></template>
+              <el-button 
+                type="primary" 
+                size="large" 
+                class="action-btn"
+                @click="handleMenuClick('ssh')"
+                :disabled="!canConnect"
+              >
+                <el-icon><Monitor /></el-icon>
+                SSH终端
+              </el-button>
+              
+              <el-button 
+                type="success" 
+                size="large" 
+                class="action-btn"
+                @click="handleMenuClick('sftp')"
+                :disabled="!canConnect"
+              >
+                <el-icon><FolderOpened /></el-icon>
+                SFTP文件
+              </el-button>
+              
+              <el-button 
+                size="large" 
+                class="action-btn"
+                @click="handleMenuClick('sync')"
+              >
+                <el-icon><Refresh /></el-icon>
                 同步状态
-              </a-button>
-              <a-button block @click="showMonitoringModal">
-                <template #icon><DashboardOutlined /></template>
-                监控详情
-              </a-button>
+              </el-button>
+              
+              <el-button 
+                type="warning" 
+                size="large" 
+                class="action-btn"
+                @click="handleMenuClick('restart')"
+                :disabled="host.status !== 'running'"
+              >
+                <el-icon><SwitchButton /></el-icon>
+                重启主机
+              </el-button>
             </div>
-          </a-card>
+          </el-card>
 
-          <!-- 云服务商信息 -->
-          <a-card v-if="host.provider" title="云服务商信息" :bordered="false" class="provider-card">
-            <a-descriptions :column="1" size="small">
-              <a-descriptions-item label="云服务商">{{ host.provider.name }}</a-descriptions-item>
-              <a-descriptions-item label="账号类型">{{ host.provider.type }}</a-descriptions-item>
-              <a-descriptions-item label="地区">{{ host.provider.region }}</a-descriptions-item>
-            </a-descriptions>
-          </a-card>
-
-          <!-- 标签信息 -->
-          <a-card title="标签信息" :bordered="false" class="tags-card">
-            <div v-if="host.tags && host.tags.length" class="host-tags">
-              <a-tag v-for="(tag, index) in host.tags" :key="index" color="blue">{{ tag }}</a-tag>
-            </div>
-            <a-empty v-else description="暂无标签" />
-            <div class="tag-actions">
-              <a-button type="dashed" size="small" @click="showTagsModal"> 管理标签 </a-button>
-            </div>
-          </a-card>
-
-          <!-- 主机组信息 -->
-          <a-card title="主机组" :bordered="false" class="group-card">
-            <div v-if="host.group">
-              <div class="group-info">
-                <span class="group-name">{{ host.group.name }}</span>
+          <!-- 监控信息卡片 -->
+          <el-card class="monitor-card" shadow="never">
+            <template #header>
+              <h3>监控信息</h3>
+            </template>
+            
+            <div class="monitor-info">
+              <div class="monitor-item">
+                <div class="monitor-label">CPU使用率</div>
+                <el-progress :percentage="cpuUsage" :color="getProgressColor(cpuUsage)" />
               </div>
-              <div class="group-actions">
-                <a-button type="dashed" size="small" @click="showMoveGroupModal">
-                  变更分组
-                </a-button>
+              
+              <div class="monitor-item">
+                <div class="monitor-label">内存使用率</div>
+                <el-progress :percentage="memoryUsage" :color="getProgressColor(memoryUsage)" />
+              </div>
+              
+              <div class="monitor-item">
+                <div class="monitor-label">磁盘使用率</div>
+                <el-progress :percentage="diskUsage" :color="getProgressColor(diskUsage)" />
+              </div>
+              
+              <div class="monitor-item">
+                <div class="monitor-label">网络状态</div>
+                <el-tag :type="networkStatus === 'normal' ? 'success' : 'danger'">
+                  {{ networkStatus === 'normal' ? '正常' : '异常' }}
+                </el-tag>
               </div>
             </div>
-            <a-empty v-else description="未分配主机组" />
-          </a-card>
-        </a-col>
-      </a-row>
-    </a-spin>
+          </el-card>
+        </el-col>
+      </el-row>
+    </div>
 
-    <!-- 监控详情弹窗 -->
-    <a-modal v-model:visible="monitoringModalVisible" title="监控详情" width="800px" :footer="null">
-      <div class="monitoring-charts">
-        <!-- 图表展示区域 -->
-        <a-spin :spinning="metricsLoading">
-          <div ref="cpuChartRef" class="metrics-chart"></div>
-          <div ref="memoryChartRef" class="metrics-chart"></div>
-          <div ref="diskChartRef" class="metrics-chart"></div>
-        </a-spin>
-      </div>
-    </a-modal>
-
-    <!-- 标签管理弹窗 -->
-    <a-modal
-      v-model:visible="tagsModalVisible"
-      title="标签管理"
-      @ok="saveHostTags"
-      :confirm-loading="tagsSaving"
-    >
-      <div class="tags-editor">
-        <a-tag v-for="(tag, index) in editTags" :key="index" closable @close="removeTag(tag)">
-          {{ tag }}
-        </a-tag>
-        <a-input
-          v-if="tagInputVisible"
-          ref="tagInputRef"
-          v-model:value="tagInputValue"
-          type="text"
-          size="small"
-          style="width: 78px"
-          @blur="handleTagInputConfirm"
-          @pressEnter="handleTagInputConfirm"
-        />
-        <a-tag v-else style="background: #fff; border-style: dashed" @click="showTagInput">
-          <plus-outlined /> 新标签
-        </a-tag>
-      </div>
-    </a-modal>
-
-    <!-- 移动分组弹窗 -->
-    <a-modal
-      v-model:visible="moveGroupModalVisible"
-      title="变更分组"
-      @ok="saveHostGroup"
-      :confirm-loading="groupSaving"
-    >
-      <div class="group-selector">
-        <a-tree-select
-          v-model:value="selectedGroupId"
-          style="width: 100%"
-          :dropdown-style="{ maxHeight: '400px', overflow: 'auto' }"
-          :tree-data="groupTreeData"
-          placeholder="请选择主机组"
-          tree-default-expand-all
-          :replaceFields="{ children: 'children', key: 'id', value: 'id', title: 'name' }"
-          allow-clear
-        />
-      </div>
-    </a-modal>
+    <!-- 模态框组件 -->
+    <terminal-window v-model:visible="terminalVisible" :host="host" />
+    <sftp-window v-model:visible="sftpVisible" :host="host" />
   </div>
 </template>
 
-<script setup lang="ts">
-  // @ts-nocheck
-  import { ref, reactive, onMounted, nextTick } from 'vue'
+<script setup>
+  import { ref, computed, onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
-  import { useHostStore } from '@/store/modules/host'
-  import { useECharts } from '@/utils/echarts/useECharts'
-  import { formatTimestamp } from '@/utils/dataprocess/format'
   import { ElMessage, ElMessageBox } from 'element-plus'
-  import dayjs from 'dayjs'
   import {
-    Edit as EditOutlined,
-    Delete as DeleteOutlined,
-    Refresh as ReloadOutlined,
-    ArrowDown as DownOutlined,
-    Monitor as CodeOutlined,
-    FolderOpened as FolderOpenOutlined,
-    RefreshRight as SyncOutlined,
-    SwitchButton as PoweroffOutlined,
-    DataAnalysis as DashboardOutlined,
-    Plus as PlusOutlined
+    ArrowLeft, Refresh, Edit, ArrowDown, Monitor, FolderOpened,
+    SwitchButton, Delete, CircleCheck, CircleClose, Warning,
+    CopyDocument, Cpu, MemoryCard, Coin
   } from '@element-plus/icons-vue'
-  import type { Host, HostMetrics } from '@/types/api/host'
+  import dayjs from 'dayjs'
+
+  import { getHost, syncHostStatus as apiSyncHostStatus, deleteHost as apiDeleteHost } from '@/api/system/host'
+  import TerminalWindow from './components/TerminalWindow.vue'
+  import SftpWindow from './components/SftpWindow.vue'
 
   const route = useRoute()
   const router = useRouter()
-  const hostStore = useHostStore()
 
-  // 获取主机ID
-  const hostId = ref<number>(Number(route.params.id))
-  const host = reactive<Host>({} as Host)
-  const loading = ref<boolean>(true)
+  // 响应式数据
+  const loading = ref(false)
+  const host = ref({})
+  const terminalVisible = ref(false)
+  const sftpVisible = ref(false)
 
-  // 监控指标数据
-  const metrics = reactive<HostMetrics>({
-    host_id: 0,
-    host_name: '',
-    timestamp: '',
-    cpu_usage: 0,
-    memory_usage: 0,
-    disk_usage: 0,
-    network_in: 0,
-    network_out: 0,
-    load_1: 0,
-    load_5: 0,
-    load_15: 0,
-    process_count: 0,
-    uptime: 0,
-    status: '',
-    ip: ''
+  // 模拟监控数据
+  const cpuUsage = ref(45)
+  const memoryUsage = ref(68)
+  const diskUsage = ref(32)
+  const networkStatus = ref('normal')
+
+  // 计算属性
+  const canConnect = computed(() => {
+    return host.value.status === 'running' &&
+           (host.value.public_ip?.length > 0 || host.value.private_ip?.length > 0)
   })
 
-  // 监控详情弹窗
-  const monitoringModalVisible = ref<boolean>(false)
-  const metricsLoading = ref<boolean>(false)
-  const cpuChartRef = ref<HTMLElement | null>(null)
-  const memoryChartRef = ref<HTMLElement | null>(null)
-  const diskChartRef = ref<HTMLElement | null>(null)
-  let cpuChart: any = null
-  let memoryChart: any = null
-  let diskChart: any = null
+  // 生命周期
+  onMounted(() => {
+    loadHostDetail()
+  })
 
-  // 标签管理弹窗
-  const tagsModalVisible = ref<boolean>(false)
-  const tagsSaving = ref<boolean>(false)
-  const editTags = ref<string[]>([])
-  const tagInputRef = ref<HTMLElement | null>(null)
-  const tagInputVisible = ref<boolean>(false)
-  const tagInputValue = ref<string>('')
-
-  // 移动分组弹窗
-  const moveGroupModalVisible = ref<boolean>(false)
-  const groupSaving = ref<boolean>(false)
-  const selectedGroupId = ref<number | null>(null)
-  const groupTreeData = ref<any[]>([])
-
-  // 加载主机详情
+  // 方法
   const loadHostDetail = async () => {
-    loading.value = true
     try {
-      const response = await hostStore.fetchHost(hostId.value)
-      Object.assign(host, response)
-
-      if (host.tags && Array.isArray(host.tags)) {
-        editTags.value = [...host.tags]
-      } else {
-        editTags.value = []
-      }
-
-      // 加载监控指标
-      await loadHostMetrics()
+      loading.value = true
+      const hostId = route.params.id
+      const response = await getHost(hostId)
+      host.value = response.data
     } catch (error) {
-      console.error('加载主机详情失败:', error)
-      ElMessage.error('加载主机详情失败')
+      ElMessage.error('加载主机详情失败: ' + error.message)
     } finally {
       loading.value = false
     }
   }
 
-  // 加载主机监控指标
-  const loadHostMetrics = async () => {
-    try {
-      const response = await hostStore.fetchHostMetrics(hostId.value)
-      if (response) {
-        Object.assign(metrics, response)
-      }
-    } catch (error) {
-      console.error('加载监控指标失败:', error)
-      // 静默处理，不影响主体功能
-    }
+  const refreshHostData = async () => {
+    await loadHostDetail()
+    ElMessage.success('数据刷新成功')
   }
 
-  // 状态文本和颜色
-  const getStatusText = (status: string) => {
-    const statusMap: Record<string, string> = {
-      running: '运行中',
-      stopped: '已停止',
-      error: '错误',
-      expired: '已过期'
-    }
-    return statusMap[status] || status
-  }
-
-  const getStatusColor = (status: string) => {
-    const colorMap: Record<string, string> = {
-      running: 'green',
-      stopped: 'orange',
-      error: 'red',
-      expired: 'gray'
-    }
-    return colorMap[status] || 'blue'
-  }
-
-  // 格式化内存大小
-  const formatMemorySize = (size?: number) => {
-    if (!size) return '未知'
-    return `${size} GB`
-  }
-
-  // 格式化到期时间和颜色
-  const formatExpiryTime = (time: string) => {
-    return formatTimestamp(time)
-  }
-
-  const getExpiryColor = (time: string) => {
-    const now = dayjs()
-    const expiry = dayjs(time)
-    const days = expiry.diff(now, 'day')
-
-    if (days < 0) return 'red'
-    if (days < 30) return 'orange'
-    return 'green'
-  }
-
-  // 处理菜单点击事件
-  const handleMenuClick = ({ key }: { key: string }) => {
-    switch (key) {
-      case 'ssh':
-        openTerminal()
-        break
-      case 'sftp':
-        openSftp()
-        break
-      case 'sync':
-        syncHostStatus()
-        break
-      case 'restart':
-        confirmRestart()
-        break
-      case 'delete':
-        confirmDelete()
-        break
-    }
-  }
-
-  // 编辑主机
-  const editHost = () => {
-    router.push(`/cmdb/host-edit/${hostId.value}`)
-  }
-
-  // 返回上一页
   const goBack = () => {
     router.back()
   }
 
-  // 刷新数据
-  const refreshHostData = async () => {
-    await loadHostDetail()
-    ElMessage.success('数据已刷新')
+  const editHost = () => {
+    router.push(`/cmdb/host/edit/${host.value.id}`)
   }
 
-  // 打开终端
-  const openTerminal = () => {
-    // 实现打开终端的逻辑，可以是新窗口或者弹窗
-    ElMessage.info('打开终端功能正在开发中')
+  const handleMenuClick = async (command) => {
+    switch (command) {
+      case 'ssh':
+        terminalVisible.value = true
+        break
+      case 'sftp':
+        sftpVisible.value = true
+        break
+      case 'sync':
+        await syncHostStatus()
+        break
+      case 'restart':
+        await restartHost()
+        break
+      case 'delete':
+        await deleteHost()
+        break
+    }
   }
 
-  // 打开SFTP
-  const openSftp = () => {
-    // 实现打开SFTP的逻辑
-    ElMessage.info('打开文件管理功能正在开发中')
-  }
-
-  // 同步主机状态
   const syncHostStatus = async () => {
     try {
-      await hostStore.syncHostStatus(hostId.value)
-      ElMessage.success('同步状态成功')
+      loading.value = true
+      await apiSyncHostStatus(host.value.id)
       await loadHostDetail()
+      ElMessage.success('状态同步成功')
     } catch (error) {
-      console.error('同步状态失败:', error)
-      ElMessage.error('同步状态失败')
+      ElMessage.error('状态同步失败: ' + error.message)
+    } finally {
+      loading.value = false
     }
   }
 
-  // 确认重启主机
-  const confirmRestart = () => {
-    ElMessageBox.confirm('确定要重启该主机吗？这可能会导致正在运行的服务中断。', '确认重启主机', {
-      confirmButtonText: '确认重启',
+  const restartHost = async () => {
+    ElMessageBox.confirm('确定要重启这台主机吗？', '重启主机', {
+      confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     }).then(async () => {
       try {
-        ElMessage.success('重启指令已发送')
-        // 实际项目中应调用API重启主机
+        loading.value = true
+        // TODO: 实现重启主机功能
+        ElMessage.info('重启功能开发中...')
+        // await hostApi.restartHost(host.value.id)
+        // ElMessage.success('重启命令已发送')
+        await loadHostDetail()
       } catch (error) {
-        console.error('重启主机失败:', error)
-        ElMessage.error('重启主机失败')
+        ElMessage.error('重启失败: ' + error.message)
+      } finally {
+        loading.value = false
       }
+    }).catch(() => {
+      // 用户取消
     })
   }
 
-  // 确认删除主机
-  const confirmDelete = () => {
-    ElMessageBox.confirm('确定要删除该主机吗？此操作不可恢复！', '确认删除主机', {
-      confirmButtonText: '确认删除',
+  const deleteHost = async () => {
+    ElMessageBox.confirm(`确定要删除主机 "${host.value.name}" 吗？`, '删除主机', {
+      confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     }).then(async () => {
       try {
-        await hostStore.deleteHost(hostId.value)
-        ElMessage.success('删除主机成功')
-        router.push('/cmdb/hosts')
+        loading.value = true
+        await apiDeleteHost(host.value.id)
+        ElMessage.success('主机删除成功')
+        router.push('/cmdb/host')
       } catch (error) {
-        console.error('删除主机失败:', error)
-        ElMessage.error('删除主机失败')
+        ElMessage.error('删除失败: ' + error.message)
+      } finally {
+        loading.value = false
       }
+    }).catch(() => {
+      // 用户取消
     })
   }
 
-  // 显示监控详情弹窗
-  const showMonitoringModal = async () => {
-    monitoringModalVisible.value = true
-    metricsLoading.value = true
-
+  const copyToClipboard = async (text) => {
     try {
-      const metricsHistory = await hostStore.fetchHostMetricsHistory(hostId.value, {
-        period: 'last_day'
-      })
-
-      nextTick(() => {
-        initMetricsCharts(metricsHistory)
-      })
+      await navigator.clipboard.writeText(text)
+      ElMessage.success('已复制到剪贴板')
     } catch (error) {
-      console.error('加载监控历史数据失败:', error)
-      ElMessage.error('加载监控历史数据失败')
-    } finally {
-      metricsLoading.value = false
+      ElMessage.error('复制失败')
     }
   }
 
-  // 初始化监控图表
-  const initMetricsCharts = (data: any) => {
-    const { initChart } = useECharts()
-
-    // CPU使用率图表
-    if (cpuChartRef.value) {
-      cpuChart = initChart(cpuChartRef.value)
-      cpuChart.setOption({
-        title: {
-          text: 'CPU使用率'
-        },
-        tooltip: {
-          trigger: 'axis'
-        },
-        xAxis: {
-          type: 'category',
-          data: data.timestamps
-        },
-        yAxis: {
-          type: 'value',
-          axisLabel: {
-            formatter: '{value} %'
-          },
-          max: 100
-        },
-        series: [
-          {
-            name: 'CPU使用率',
-            type: 'line',
-            data: data.cpu.map((v: number) => (v * 100).toFixed(2)),
-            areaStyle: {}
-          }
-        ]
-      })
+  // 工具函数
+  const getStatusTagType = (status) => {
+    const statusMap = {
+      'running': 'success',
+      'stopped': 'info',
+      'error': 'danger',
+      'expired': 'warning'
     }
-
-    // 内存使用率图表
-    if (memoryChartRef.value) {
-      memoryChart = initChart(memoryChartRef.value)
-      memoryChart.setOption({
-        title: {
-          text: '内存使用率'
-        },
-        tooltip: {
-          trigger: 'axis'
-        },
-        xAxis: {
-          type: 'category',
-          data: data.timestamps
-        },
-        yAxis: {
-          type: 'value',
-          axisLabel: {
-            formatter: '{value} %'
-          },
-          max: 100
-        },
-        series: [
-          {
-            name: '内存使用率',
-            type: 'line',
-            data: data.memory.map((v: number) => (v * 100).toFixed(2)),
-            areaStyle: {}
-          }
-        ]
-      })
-    }
-
-    // 磁盘使用率图表
-    if (diskChartRef.value) {
-      diskChart = initChart(diskChartRef.value)
-      diskChart.setOption({
-        title: {
-          text: '磁盘使用率'
-        },
-        tooltip: {
-          trigger: 'axis'
-        },
-        xAxis: {
-          type: 'category',
-          data: data.timestamps
-        },
-        yAxis: {
-          type: 'value',
-          axisLabel: {
-            formatter: '{value} %'
-          },
-          max: 100
-        },
-        series: [
-          {
-            name: '磁盘使用率',
-            type: 'line',
-            data: data.disk.map((v: number) => (v * 100).toFixed(2)),
-            areaStyle: {}
-          }
-        ]
-      })
-    }
+    return statusMap[status] || 'info'
   }
 
-  // 显示标签管理弹窗
-  const showTagsModal = () => {
-    tagsModalVisible.value = true
-  }
-
-  // 显示标签输入框
-  const showTagInput = () => {
-    tagInputVisible.value = true
-    nextTick(() => {
-      tagInputRef.value?.focus()
-    })
-  }
-
-  // 处理标签输入确认
-  const handleTagInputConfirm = () => {
-    if (tagInputValue.value && !editTags.value.includes(tagInputValue.value)) {
-      editTags.value.push(tagInputValue.value)
+  const getStatusIcon = (status) => {
+    const iconMap = {
+      'running': 'CircleCheck',
+      'stopped': 'CircleClose',
+      'error': 'Warning',
+      'expired': 'Warning'
     }
-    tagInputVisible.value = false
-    tagInputValue.value = ''
+    return iconMap[status] || 'CircleClose'
   }
 
-  // 移除标签
-  const removeTag = (tag: string) => {
-    editTags.value = editTags.value.filter((t) => t !== tag)
-  }
-
-  // 保存标签
-  const saveHostTags = async () => {
-    tagsSaving.value = true
-    try {
-      await hostStore.batchUpdateTags([hostId.value], editTags.value, 'replace')
-      host.tags = [...editTags.value]
-      ElMessage.success('标签更新成功')
-      tagsModalVisible.value = false
-    } catch (error) {
-      console.error('更新标签失败:', error)
-      ElMessage.error('更新标签失败')
-    } finally {
-      tagsSaving.value = false
+  const getStatusText = (status) => {
+    const textMap = {
+      'running': '运行中',
+      'stopped': '已停止',
+      'error': '错误',
+      'expired': '已过期'
     }
+    return textMap[status] || status
   }
 
-  // 显示移动分组弹窗
-  const showMoveGroupModal = async () => {
-    moveGroupModalVisible.value = true
-
-    // 加载主机组树
-    if (groupTreeData.value.length === 0) {
-      try {
-        await hostStore.fetchHostGroupTree()
-        groupTreeData.value = hostStore.hostGroupTree
-        selectedGroupId.value = host.group_id || null
-      } catch (error) {
-        console.error('加载主机组失败:', error)
-        ElMessage.error('加载主机组失败')
-      }
+  const getProviderTagType = (providerType) => {
+    const typeMap = {
+      'aliyun': 'warning',
+      'tencent': 'primary',
+      'aws': 'success',
+      'manual': 'info'
     }
+    return typeMap[providerType] || 'info'
   }
 
-  // 保存主机组
-  const saveHostGroup = async () => {
-    groupSaving.value = true
-    try {
-      await hostStore.moveHost(hostId.value, selectedGroupId.value || undefined)
-      ElMessage.success('分组移动成功')
-      moveGroupModalVisible.value = false
-      await loadHostDetail()
-    } catch (error) {
-      console.error('更新主机分组失败:', error)
-      ElMessage.error('更新主机分组失败')
-    } finally {
-      groupSaving.value = false
+  const getProviderDisplayName = (providerType) => {
+    const nameMap = {
+      'aliyun': '阿里云',
+      'tencent': '腾讯云',
+      'aws': 'AWS',
+      'manual': '自建'
     }
+    return nameMap[providerType] || providerType
   }
 
-  // 初始化
-  onMounted(() => {
-    if (!hostStore.fetchHost) {
-      // 添加fetchHost方法到hostStore（如果不存在）
-      hostStore.fetchHost = async (id: number) => {
-        try {
-          const response = await hostStore.getHost(id)
-          return response
-        } catch (error) {
-          throw error
-        }
-      }
-    }
+  const formatDateTime = (dateTime) => {
+    if (!dateTime) return '-'
+    return dayjs(dateTime).format('YYYY-MM-DD HH:mm:ss')
+  }
 
-    loadHostDetail()
-  })
+  const formatMemory = (memory) => {
+    if (!memory) return '-'
+    if (memory >= 1024) {
+      return `${(memory / 1024).toFixed(1)} GB`
+    }
+    return `${memory} MB`
+  }
+
+  const isExpired = (expiredAt) => {
+    if (!expiredAt) return false
+    return dayjs(expiredAt).isBefore(dayjs())
+  }
+
+  const isExpiring = (expiredAt) => {
+    if (!expiredAt) return false
+    const diffDays = dayjs(expiredAt).diff(dayjs(), 'day')
+    return diffDays <= 30 && diffDays >= 0
+  }
+
+  const getProgressColor = (percentage) => {
+    if (percentage >= 80) return '#f56c6c'
+    if (percentage >= 60) return '#e6a23c'
+    return '#67c23a'
+  }
 </script>
 
 <style lang="scss" scoped>
-  .host-detail-container {
-    padding: 0;
+.host-detail-page {
+  padding: 16px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
 
-    .detail-content {
-      margin-top: 20px;
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 20px 24px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 
-      .ant-card {
-        margin-bottom: 16px;
-      }
-    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
 
-    .metrics-card {
-      margin-top: 16px;
+      .host-title {
+        h1 {
+          margin: 0;
+          font-size: 24px;
+          font-weight: 600;
+          color: #1f2937;
+        }
 
-      .metric-item {
-        margin-bottom: 16px;
-
-        .metric-header {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 8px;
-
-          .metric-title {
-            font-weight: 500;
-          }
-
-          .metric-value {
-            font-weight: 600;
-          }
+        .instance-id {
+          margin: 4px 0 0 0;
+          color: #6b7280;
+          font-size: 14px;
+          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
         }
       }
     }
 
-    .action-card {
-      .quick-actions {
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .status-tags {
         display: flex;
-        flex-direction: column;
-        gap: 12px;
+        gap: 8px;
+
+        .status-tag {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+
+          .status-icon {
+            font-size: 14px;
+          }
+        }
       }
-    }
 
-    .provider-card {
-      margin-top: 16px;
-    }
-
-    .tags-card {
-      margin-top: 16px;
-
-      .host-tags {
-        margin-bottom: 16px;
+      .action-buttons {
         display: flex;
-        flex-wrap: wrap;
         gap: 8px;
       }
+    }
+  }
 
-      .tag-actions {
-        margin-top: 16px;
+  .main-content {
+    .info-card {
+      margin-bottom: 24px;
+      border-radius: 8px;
+      border: none;
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        h3 {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 600;
+          color: #1f2937;
+        }
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 16px;
+
+        .info-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 0;
+          border-bottom: 1px solid #f3f4f6;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          label {
+            font-weight: 500;
+            color: #374151;
+            min-width: 100px;
+          }
+
+          span {
+            color: #6b7280;
+            text-align: right;
+
+            &.instance-id {
+              font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            }
+
+            &.expired {
+              color: #dc2626;
+            }
+
+            &.expiring {
+              color: #d97706;
+            }
+          }
+        }
+      }
+
+      .network-info {
+        .ip-section {
+          margin-bottom: 24px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          h4 {
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+          }
+
+          .ip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+
+            .ip-item {
+              display: flex;
+              align-items: center;
+              gap: 4px;
+            }
+          }
+        }
+      }
+
+      .config-info {
+        .config-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 16px;
+
+          .config-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+
+            .config-icon {
+              width: 40px;
+              height: 40px;
+              border-radius: 8px;
+              background: #e5e7eb;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #6b7280;
+              font-size: 18px;
+            }
+
+            .config-details {
+              flex: 1;
+
+              .config-label {
+                display: block;
+                font-size: 12px;
+                color: #6b7280;
+                margin-bottom: 4px;
+              }
+
+              .config-value {
+                display: block;
+                font-size: 16px;
+                font-weight: 600;
+                color: #1f2937;
+              }
+            }
+          }
+        }
       }
     }
+  }
 
-    .group-card {
-      margin-top: 16px;
+  .action-card {
+    margin-bottom: 24px;
+    border-radius: 8px;
+    border: none;
 
-      .group-info {
-        margin-bottom: 16px;
+    .quick-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
 
-        .group-name {
-          font-size: 16px;
+      .action-btn {
+        width: 100%;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .monitor-card {
+    border-radius: 8px;
+    border: none;
+
+    .monitor-info {
+      .monitor-item {
+        margin-bottom: 20px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .monitor-label {
+          margin-bottom: 8px;
+          font-size: 14px;
+          color: #374151;
           font-weight: 500;
         }
       }
     }
+  }
+}
 
-    .monitoring-charts {
-      .metrics-chart {
-        height: 300px;
-        margin-bottom: 16px;
+// 全局样式覆盖
+:deep(.el-card) {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+:deep(.el-progress-bar__outer) {
+  border-radius: 4px;
+}
+
+:deep(.el-progress-bar__inner) {
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .host-detail-page {
+    padding: 12px;
+
+    .page-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+
+      .header-right {
+        width: 100%;
+        justify-content: space-between;
+
+        .action-buttons {
+          flex-wrap: wrap;
+        }
       }
     }
 
-    .tags-editor {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
+    .main-content {
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
 
-    .group-selector {
-      width: 100%;
+      .config-grid {
+        grid-template-columns: 1fr;
+      }
     }
   }
+}
 </style>

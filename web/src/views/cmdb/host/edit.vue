@@ -306,7 +306,7 @@
 
     try {
       loading.value = true
-      const hostDetail = await hostStore.getHostDetail(hostId.value)
+      const hostDetail = await hostStore.getHost(hostId.value)
 
       // 填充表单数据
       Object.assign(formData, hostDetail)
@@ -374,7 +374,7 @@
         await hostStore.updateHost(hostId.value, submitData)
         message.success('更新主机成功')
       } else {
-        await hostStore.addManualHost(submitData)
+        await hostStore.addHost(submitData)
         message.success('添加主机成功')
       }
 

@@ -121,8 +121,8 @@
   const _systemName = AppConfig.systemInfo.name
   const formRef = ref<FormInstance>()
   const formData = reactive({
-    username: '',
-    password: '',
+    username: import.meta.env.DEV ? 'admin' : '',
+    password: import.meta.env.DEV ? '123456' : '',
     rememberPassword: true,
     captcha: ''
   })

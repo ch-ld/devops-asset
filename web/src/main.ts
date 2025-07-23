@@ -26,7 +26,7 @@ import '@utils/sys/console.ts'                      // 控制台输出内容
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { setupGlobDirectives } from './directives'
 import language from './locales'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 document.addEventListener(
   'touchstart',
@@ -45,6 +45,14 @@ app.use(language)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
+
+// 配置Element Plus MessageBox默认选项
+// ElMessageBox.setDefaults({
+//   center: true,
+//   closeOnClickModal: false,
+//   closeOnPressEscape: false,
+//   customClass: 'custom-message-box'
+// })
 
 // 全局错误处理
 app.config.errorHandler = (err, instance, info) => {

@@ -261,6 +261,48 @@
 
 .el-message-box {
   padding: 25px 20px !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  z-index: 9999 !important;
+}
+
+// 确保遮罩层正确显示
+.el-overlay {
+  z-index: 9998 !important;
+}
+
+// 修复MessageBox在某些布局中的定位问题
+.el-message-box__wrapper {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+// MessageBox 样式优化
+.el-message-box {
+  .el-message-box__message {
+    white-space: pre-line !important;
+    line-height: 1.6 !important;
+    word-wrap: break-word !important;
+  }
+
+  &.el-message-box--center {
+    .el-message-box__content {
+      text-align: center !important;
+    }
+
+    .el-message-box__message {
+      text-align: left !important;
+    }
+  }
 }
 
 .el-message-box__title {

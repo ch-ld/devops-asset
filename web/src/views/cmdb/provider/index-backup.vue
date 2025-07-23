@@ -52,7 +52,7 @@
       
       <div class="stat-card">
         <div class="stat-icon total">
-          <el-icon size="24">{{ iconMap.CloudServer }}</el-icon>
+          <el-icon size="24"><CloudServer /></el-icon>
         </div>
         <div class="stat-content">
           <div class="stat-number">{{ providerList.length }}</div>
@@ -143,12 +143,9 @@
                       <el-icon>{{ iconMap.Edit }}</el-icon>
                       编辑
                     </el-dropdown-item>
-                    <el-dropdown-item
-                      :command="`sync-${provider.id}`"
-                      :disabled="syncingProviders.has(provider.id)"
-                    >
+                    <el-dropdown-item :command="`sync-${provider.id}`">
                       <el-icon>{{ iconMap.Refresh }}</el-icon>
-                      {{ syncingProviders.has(provider.id) ? '同步中...' : '同步资源' }}
+                      同步资源
                     </el-dropdown-item>
                     <el-dropdown-item :command="`delete-${provider.id}`" divided>
                       <el-icon>{{ iconMap.Delete }}</el-icon>
@@ -164,7 +161,7 @@
           <div class="card-content">
             <div class="info-item">
               <span class="info-label">AccessKey ID:</span>
-              <span class="info-value">{{ maskAccessKey(provider.access_key) }}</span>
+              <span class="info-value">{{ maskAccessKey(provider.access_key_id) }}</span>
             </div>
             <div class="info-item" v-if="provider.region">
               <span class="info-label">默认区域:</span>
@@ -187,13 +184,8 @@
               <el-button size="small" type="primary" @click="handleEdit(provider)">
                 编辑
               </el-button>
-              <el-button
-                size="small"
-                :loading="syncingProviders.has(provider.id)"
-                :disabled="syncingProviders.has(provider.id)"
-                @click="showGroupSelectDialog(provider)"
-              >
-                {{ syncingProviders.has(provider.id) ? '同步中...' : '同步' }}
+              <el-button size="small" @click="handleSync(provider)">
+                同步
               </el-button>
             </div>
           </div>
@@ -213,64 +205,6 @@
       @success="handleModalSuccess"
       @cancel="handleModalCancel"
     />
-
-    <!-- 主机组选择对话框 -->
-    <el-dialog
-      v-model="groupSelectDialog"
-      title="选择目标主机组"
-      width="500px"
-      :close-on-click-modal="false"
-    >
-      <div class="group-select-content">
-        <p class="sync-info">
-          将同步云账号 <strong>{{ currentSyncProvider?.name }}</strong> 的主机到指定主机组
-        </p>
-
-        <el-form label-width="100px">
-          <el-form-item label="目标主机组:">
-            <el-select
-              v-model="selectedGroupId"
-              placeholder="请选择主机组（不选择则同步到默认组）"
-              clearable
-              style="width: 100%"
-            >
-              <el-option
-                v-for="group in flattenHostGroups(hostGroups)"
-                :key="group.id"
-                :label="group.label"
-                :value="group.id"
-              />
-            </el-select>
-          </el-form-item>
-        </el-form>
-
-        <div class="sync-tips">
-          <el-alert
-            title="提示"
-            type="info"
-            :closable="false"
-            show-icon
-          >
-            <template #default>
-              <ul>
-                <li>如果不选择主机组，主机将同步到默认组</li>
-                <li>同步过程中会自动跳过已存在的主机</li>
-                <li>同步完成后会显示详细的统计信息</li>
-              </ul>
-            </template>
-          </el-alert>
-        </div>
-      </div>
-
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="groupSelectDialog = false">取消</el-button>
-          <el-button type="primary" @click="confirmSync">
-            开始同步
-          </el-button>
-        </div>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -290,8 +224,7 @@ const iconMap = {
 import {
   getProviderList,
   deleteProvider,
-  syncResources,
-  getHostGroupTree
+  syncResources
 } from '@/api/system/host'
 import ProviderModal from './ProviderModal.vue'
 
@@ -315,11 +248,7 @@ async function fetchProviderList() {
   loading.value = true
   try {
     const response = await getProviderList(searchForm)
-    if (response.code === 200) {
-      providerList.value = response.data || []
-    } else {
-      ElMessage.error(response.message || '获取云账号列表失败')
-    }
+    providerList.value = response.data || []
   } catch (error) {
     console.error('获取云账号列表失败:', error)
     ElMessage.error('获取云账号列表失败')
@@ -352,9 +281,7 @@ function getStatusType(status: string) {
   const types = {
     active: 'success',
     inactive: 'danger',
-    pending: 'warning',
-    enabled: 'success',
-    disabled: 'danger'
+    pending: 'warning'
   }
   return types[status] || 'info'
 }
@@ -363,9 +290,7 @@ function getStatusText(status: string) {
   const texts = {
     active: '正常',
     inactive: '异常',
-    pending: '待验证',
-    enabled: '正常',
-    disabled: '禁用'
+    pending: '待验证'
   }
   return texts[status] || '未知'
 }
@@ -390,123 +315,15 @@ function handleEdit(row: any) {
   showModal.value = true
 }
 
-// 同步状态管理
-const syncingProviders = ref(new Set<number>())
-
-// 主机组选择对话框
-const groupSelectDialog = ref(false)
-const hostGroups = ref<any[]>([])
-const selectedGroupId = ref<number | undefined>()
-const currentSyncProvider = ref<any>(null)
-
-// 获取主机组列表
-async function fetchHostGroups() {
+async function handleSync(row: any) {
   try {
-    const response = await getHostGroupTree()
-    if (response.code === 200) {
-      hostGroups.value = response.data || []
-    } else {
-      ElMessage.error('获取主机组列表失败')
-    }
-  } catch (error) {
-    console.error('获取主机组列表失败:', error)
-    ElMessage.error('获取主机组列表失败')
-  }
-}
-
-// 展开主机组树形结构为平铺列表
-function flattenHostGroups(groups: any[], level = 0): any[] {
-  const result: any[] = []
-  for (const group of groups) {
-    result.push({
-      ...group,
-      level,
-      label: '　'.repeat(level) + group.name
-    })
-    if (group.children && group.children.length > 0) {
-      result.push(...flattenHostGroups(group.children, level + 1))
-    }
-  }
-  return result
-}
-
-// 显示主机组选择对话框
-async function showGroupSelectDialog(row: any) {
-  currentSyncProvider.value = row
-  selectedGroupId.value = undefined
-
-  // 获取主机组列表
-  await fetchHostGroups()
-
-  groupSelectDialog.value = true
-}
-
-async function handleSync(row: any, groupId?: number) {
-  // 防止重复同步
-  if (syncingProviders.value.has(row.id)) {
-    ElMessage.warning('该云账号正在同步中，请稍候...')
-    return
-  }
-
-  console.log('前端调试: handleSync被调用，参数:', { providerId: row.id, groupId })
-
-  try {
-    // 添加到同步中的列表
-    syncingProviders.value.add(row.id)
-
-    // 显示开始同步的消息
-    const groupInfo = groupId ? `到指定主机组` : ''
-    ElMessage.info(`开始同步云账号 "${row.name}" 的资源${groupInfo}...`)
-
-    // 调用同步接口
-    console.log('前端调试: 调用syncResources，参数:', { providerId: row.id, groupId })
-    const response = await syncResources(row.id, groupId)
-    const result = response.data || response
-
-    // 根据同步结果显示不同的消息
-    if (result.success) {
-      ElNotification({
-        title: '同步成功',
-        message: `${result.message}<br/>云账号: ${result.provider_name || row.name}<br/>耗时: ${Math.round(result.duration / 1000000)}ms`,
-        type: 'success',
-        duration: 5000,
-        dangerouslyUseHTMLString: true
-      })
-    } else {
-      ElNotification({
-        title: '同步失败',
-        message: `${result.message}<br/>云账号: ${result.provider_name || row.name}`,
-        type: 'error',
-        duration: 8000,
-        dangerouslyUseHTMLString: true
-      })
-    }
-
-    // 刷新列表
+    await syncResources(row.id)
+    ElMessage.success('同步任务已启动')
     fetchProviderList()
-  } catch (error: any) {
+  } catch (error) {
     console.error('同步失败:', error)
-    ElNotification({
-      title: '同步失败',
-      message: error.response?.data?.message || error.message || '网络错误，请稍后重试',
-      type: 'error',
-      duration: 8000
-    })
-  } finally {
-    // 从同步中的列表移除
-    syncingProviders.value.delete(row.id)
+    ElMessage.error('同步失败')
   }
-}
-
-// 确认同步到选定的主机组
-async function confirmSync() {
-  if (!currentSyncProvider.value) return
-
-  console.log('前端调试: 选择的主机组ID:', selectedGroupId.value)
-  console.log('前端调试: 当前同步提供商:', currentSyncProvider.value)
-
-  groupSelectDialog.value = false
-  await handleSync(currentSyncProvider.value, selectedGroupId.value)
 }
 
 async function handleDelete(row: any) {
@@ -543,7 +360,7 @@ function handleCommand(command: string) {
       handleEdit(provider)
       break
     case 'sync':
-      showGroupSelectDialog(provider)
+      handleSync(provider)
       break
     case 'delete':
       handleDelete(provider)
@@ -560,43 +377,12 @@ function handleModalCancel() {
   showModal.value = false
 }
 
-function formatDate(dateValue: string | number) {
-  if (!dateValue) return '--'
+function formatDate(dateStr: string) {
+  if (!dateStr) return '--'
   try {
-    let date: Date
-
-    if (typeof dateValue === 'number') {
-      // 如果是数字，判断是秒级还是毫秒级时间戳
-      // 秒级时间戳通常小于 10^13，毫秒级时间戳大于 10^13
-      if (dateValue < 10000000000) {
-        // 秒级时间戳，转换为毫秒
-        date = new Date(dateValue * 1000)
-      } else {
-        // 毫秒级时间戳
-        date = new Date(dateValue)
-      }
-    } else {
-      // 字符串格式
-      date = new Date(dateValue)
-    }
-
-    // 检查日期是否有效
-    if (isNaN(date.getTime())) {
-      return '--'
-    }
-
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    })
+    return new Date(dateStr).toLocaleString('zh-CN')
   } catch (error) {
-    console.error('时间格式化错误:', error, dateValue)
-    return '--'
+    return dateStr
   }
 }
 
@@ -992,42 +778,5 @@ onMounted(() => {
 :deep(.el-tag) {
   border-radius: 4px;
   font-weight: 500;
-}
-
-/* 主机组选择对话框样式 */
-.group-select-content {
-  .sync-info {
-    margin-bottom: 20px;
-    padding: 12px;
-    background-color: #f5f7fa;
-    border-radius: 4px;
-    color: #606266;
-    font-size: 14px;
-
-    strong {
-      color: #409eff;
-      font-weight: 600;
-    }
-  }
-
-  .sync-tips {
-    margin-top: 20px;
-
-    ul {
-      margin: 0;
-      padding-left: 20px;
-
-      li {
-        margin-bottom: 5px;
-        color: #909399;
-        font-size: 13px;
-        line-height: 1.5;
-      }
-    }
-  }
-}
-
-.dialog-footer {
-  text-align: right;
 }
 </style>

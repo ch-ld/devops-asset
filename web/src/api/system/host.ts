@@ -1,4 +1,4 @@
-import client from '@/utils/http'
+import client from '@/api/client'
 import type {
   Provider,
   Host,
@@ -15,8 +15,8 @@ const base = '/api/v1/cmdb'
 // Provider API
 // ==============================
 
-export function getProviderList() {
-  return client.get<Provider[]>({ url: `${base}/providers` })
+export function getProviderList(params?: any) {
+  return client.get<any>({ url: `${base}/providers`, params })
 }
 
 export function getProvider(id: number) {
@@ -35,8 +35,29 @@ export function deleteProvider(id: number) {
   return client.del({ url: `${base}/providers/${id}` })
 }
 
-export function syncResources(providerId: number) {
-  return client.post({ url: `${base}/providers/${providerId}/sync` })
+export function validateProviderCredentials(data: {
+  type: string
+  access_key: string
+  secret_key: string
+  region?: string
+}) {
+  return client.post({ url: `${base}/providers/validate`, data })
+}
+
+export function getProviderTypes() {
+  return client.get({ url: `${base}/providers/types` })
+}
+
+export function getProviderRegions(type: string) {
+  return client.get({ url: `${base}/providers/types/${type}/regions` })
+}
+
+export function syncResources(providerId: number, groupId?: number) {
+  const params = groupId ? { group_id: groupId } : {}
+  return client.post({
+    url: `${base}/providers/${providerId}/sync`,
+    params
+  })
 }
 
 // ==============================
@@ -89,10 +110,24 @@ export function getHostList(params?: {
   group_id?: number
   region?: string
 }) {
-  return client.get<{ total: number; data: Host[] }>({
+  return client.get<Host[]>({
     url: `${base}/hosts`,
     params
   })
+}
+
+// 获取主机列表（包含完整响应信息）
+import axios from 'axios'
+export async function getHostListWithCount(params?: {
+  page?: number
+  page_size?: number
+  keyword?: string
+  status?: string
+  group_id?: number
+  region?: string
+}) {
+  const response = await axios.get(`${base}/hosts`, { params })
+  return response.data  // 返回完整的API响应 {code, data, count}
 }
 
 export function getHost(id: number) {
@@ -218,6 +253,18 @@ export function batchSSH(data: { ids: number[]; cmd: string; timeout?: number })
   return client.post<SSHResult[]>({ url: `${base}/hosts/batch_ssh`, data })
 }
 
+export function batchStart(data: { ids: number[] }) {
+  return client.post({ url: `${base}/hosts/batch_start`, data })
+}
+
+export function batchStop(data: { ids: number[] }) {
+  return client.post({ url: `${base}/hosts/batch_stop`, data })
+}
+
+export function batchReboot(data: { ids: number[] }) {
+  return client.post({ url: `${base}/hosts/batch_reboot`, data })
+}
+
 export function batchSFTP(data: { ids: number[]; remote_path: string; file: File }) {
   const formData = new FormData()
   formData.append('file', data.file)
@@ -261,6 +308,36 @@ export function getHostMetricsHistory(
 
 export function getHostsOverallMetrics() {
   return client.get({ url: `${base}/hosts/metrics/overall` })
+}
+
+// ==============================
+// Host Statistics API
+// ==============================
+
+export function getHostStats(params?: any) {
+  return client.get({ url: `${base}/dashboard/summary`, params })
+}
+
+// 获取主机统计数据（包含完整响应信息）
+export async function getHostStatsWithResponse(params?: any) {
+  const response = await axios.get(`${base}/dashboard/summary`, { params })
+  return response.data  // 返回完整的API响应 {code, data}
+}
+
+// ==============================
+// Host Groups API (alias for compatibility)
+// ==============================
+
+export function getHostGroups() {
+  return getHostGroupTree()
+}
+
+// ==============================
+// Export API (alias for compatibility)
+// ==============================
+
+export function exportHosts(params?: any) {
+  return batchExportHosts(params)
 }
 
 // ==============================

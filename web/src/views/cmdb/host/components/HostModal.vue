@@ -11,14 +11,24 @@
         <el-tab-pane label="基本信息" name="basic">
           <!-- 基本信息 Tab 已迁移 -->
           <el-form-item label="云账号" prop="provider_id">
-            <el-select v-model="formData.provider_id" placeholder="选择云账号" clearable>
-              <el-option
-                v-for="p in providers"
-                :key="p.id"
-                :label="`${p.name} (${p.type})`"
-                :value="p.id"
-              />
-            </el-select>
+            <div class="custom-select-wrapper">
+              <select
+                v-model="formData.provider_id"
+                class="custom-select"
+              >
+                <option value="">选择云账号</option>
+                <option
+                  v-for="p in providers"
+                  :key="p.id"
+                  :value="p.id"
+                >
+                  {{ p.name }} ({{ p.type }})
+                </option>
+              </select>
+              <div class="select-arrow">
+                <el-icon><ArrowDown /></el-icon>
+              </div>
+            </div>
           </el-form-item>
 
           <el-form-item label="实例ID" prop="instance_id">
@@ -43,13 +53,22 @@
           </el-form-item>
 
           <el-form-item label="状态" prop="status">
-            <el-select v-model="formData.status" placeholder="选择状态">
-              <el-option label="运行中" value="running" />
-              <el-option label="已停止" value="stopped" />
-              <el-option label="启动中" value="starting" />
-              <el-option label="停止中" value="stopping" />
-              <el-option label="未知" value="unknown" />
-            </el-select>
+            <div class="custom-select-wrapper">
+              <select
+                v-model="formData.status"
+                class="custom-select"
+              >
+                <option value="">选择状态</option>
+                <option value="running">运行中</option>
+                <option value="stopped">已停止</option>
+                <option value="starting">启动中</option>
+                <option value="stopping">停止中</option>
+                <option value="unknown">未知</option>
+              </select>
+              <div class="select-arrow">
+                <el-icon><ArrowDown /></el-icon>
+              </div>
+            </div>
           </el-form-item>
 
           <el-form-item label="主机组" prop="group_id">
@@ -197,7 +216,7 @@
   import { ElMessage } from 'element-plus'
   import type { FormInstance } from 'element-plus'
   // 使用 Element Plus 图标替代 Ant Design 图标
-  import { Plus, Delete } from '@element-plus/icons-vue'
+  import { Plus, Delete, ArrowDown } from '@element-plus/icons-vue'
 
   interface Provider {
     id: number
@@ -428,5 +447,52 @@
 <style scoped>
   .ant-form-item {
     margin-bottom: 16px;
+  }
+
+  /* 自定义Select样式 */
+  .custom-select-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  .custom-select {
+    width: 100%;
+    height: 40px;
+    padding: 8px 32px 8px 12px;
+    border: 1px solid #dcdfe6;
+    border-radius: 6px;
+    background-color: #ffffff;
+    font-size: 14px;
+    color: #606266;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
+  }
+
+  .custom-select:hover {
+    border-color: #c0c4cc;
+  }
+
+  .custom-select:focus {
+    border-color: #409eff;
+    box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+  }
+
+  .select-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #c0c4cc;
+    transition: transform 0.3s ease;
+  }
+
+  .custom-select:focus + .select-arrow {
+    color: #409eff;
+    transform: translateY(-50%) rotate(180deg);
   }
 </style>

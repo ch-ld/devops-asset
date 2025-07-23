@@ -109,7 +109,7 @@
 <script setup>
   import { ref, reactive, computed, onMounted, watch } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
-  import * as hostApi from '@/api/system/host'
+  import { createManualHost, updateHost, getHostGroupTree } from '@/api/system/host'
   import { useHostStore } from '@/store/modules/host'
 
   const props = defineProps({
@@ -190,7 +190,7 @@
   const fetchHostGroups = async () => {
     try {
       loading.value = true
-      const response = await hostApi.getHostGroupTree()
+      const response = await getHostGroupTree()
       hostGroups.value = response || []
     } catch (error) {
       console.error('Failed to fetch host groups:', error)
@@ -292,11 +292,11 @@
 
       if (props.isEdit && props.host.id) {
         // 编辑模式
-        await hostApi.updateHost(props.host.id, formattedData)
+        await updateHost(props.host.id, formattedData)
         ElMessage.success('更新主机成功')
       } else {
         // 添加模式
-        await hostApi.createManualHost(formattedData)
+        await createManualHost(formattedData)
         ElMessage.success('添加主机成功')
       }
 

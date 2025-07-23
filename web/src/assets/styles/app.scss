@@ -165,3 +165,59 @@
     overflow: hidden;
   }
 }
+
+/* 全局修复Element Plus下拉框z-index问题 - 厂商管理区域选择 */
+.el-select-dropdown,
+.el-select__popper,
+.el-popper.el-select__popper,
+.el-popper[data-popper-placement],
+div[data-popper-placement] {
+  z-index: 99999999 !important;
+  position: fixed !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid #e4e7ed !important;
+}
+
+.el-popper {
+  z-index: 99999999 !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.el-select-dropdown__item {
+  pointer-events: auto !important;
+  z-index: 99999999 !important;
+  background-color: #ffffff !important;
+  color: #606266 !important;
+  opacity: 1 !important;
+}
+
+.el-select-dropdown__item:hover {
+  background-color: #f5f7fa !important;
+  color: #409eff !important;
+}
+
+.el-select-dropdown__item.is-selected {
+  background-color: #409eff !important;
+  color: #ffffff !important;
+}
+
+/* 强制覆盖所有可能的Element Plus下拉框样式 */
+[class*="el-select-dropdown"],
+[class*="el-popper"],
+[id*="el-popper"],
+[role="listbox"],
+[role="option"] {
+  z-index: 99999999 !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* 确保模态框层级低于下拉框 */
+.el-overlay,
+.el-dialog,
+.el-overlay-dialog {
+  z-index: 2001 !important;
+}

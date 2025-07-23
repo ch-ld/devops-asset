@@ -52,7 +52,18 @@ export const asyncRoutes: AppRouteRecord[] = [
     children: [
       {
         id: 201,
-        path: 'hosts',
+        path: 'overview',
+        name: 'ResourceOverview',
+        component: 'cmdb/resource/index',
+        meta: {
+          title: '资源概览',
+          keepAlive: true,
+          roles: ['超级管理员', '管理员', '运维人员']
+        }
+      },
+      {
+        id: 202,
+        path: 'host',
         name: 'HostManagement',
         component: 'cmdb/host/index',
         meta: {
@@ -62,8 +73,19 @@ export const asyncRoutes: AppRouteRecord[] = [
         }
       },
       {
-        id: 202,
-        path: 'host/:id',
+        id: 203,
+        path: 'host/dashboard',
+        name: 'HostDashboard',
+        component: 'cmdb/host/dashboard/index',
+        meta: {
+          title: '主机概览',
+          keepAlive: true,
+          roles: ['超级管理员', '管理员', '运维人员']
+        }
+      },
+      {
+        id: 204,
+        path: 'host/detail/:id',
         name: 'HostDetail',
         component: 'cmdb/host/detail',
         meta: {
@@ -74,8 +96,8 @@ export const asyncRoutes: AppRouteRecord[] = [
         }
       },
       {
-        id: 203,
-        path: 'host-edit/:id',
+        id: 205,
+        path: 'host/edit/:id',
         name: 'HostEdit',
         component: 'cmdb/host/edit',
         meta: {
@@ -86,8 +108,8 @@ export const asyncRoutes: AppRouteRecord[] = [
         }
       },
       {
-        id: 204,
-        path: 'host-create',
+        id: 206,
+        path: 'host/create',
         name: 'HostCreate',
         component: 'cmdb/host/edit',
         meta: {
@@ -98,18 +120,7 @@ export const asyncRoutes: AppRouteRecord[] = [
         }
       },
       {
-        id: 205,
-        path: 'host-dashboard',
-        name: 'HostDashboard',
-        component: 'cmdb/host/dashboard/index',
-        meta: {
-          title: '主机概览',
-          keepAlive: true,
-          roles: ['超级管理员', '管理员', '运维人员']
-        }
-      },
-      {
-        id: 206,
+        id: 207,
         path: 'providers',
         name: 'ProviderManagement',
         component: 'cmdb/provider/index',
@@ -120,14 +131,14 @@ export const asyncRoutes: AppRouteRecord[] = [
         }
       },
       {
-        id: 207,
-        path: 'system',
-        name: 'SystemManagement',
-        component: 'system/announcement/index',
+        id: 208,
+        path: 'alerts',
+        name: 'AlertManagement',
+        component: 'cmdb/alert/index',
         meta: {
-          title: '公告管理',
+          title: '告警管理',
           keepAlive: true,
-          roles: ['超级管理员', '管理员']
+          roles: ['超级管理员', '管理员', '运维人员']
         }
       }
     ]

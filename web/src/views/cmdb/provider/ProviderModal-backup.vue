@@ -102,9 +102,9 @@
               </el-input>
             </el-form-item>
 
-            <el-form-item label="AccessKey ID" prop="access_key">
+            <el-form-item label="AccessKey ID" prop="access_key_id">
               <el-input
-                v-model="formState.access_key"
+                v-model="formState.access_key_id"
                 placeholder="请输入 AccessKey ID"
                 size="large"
                 clearable
@@ -115,9 +115,9 @@
               </el-input>
             </el-form-item>
 
-            <el-form-item label="AccessKey Secret" prop="secret_key">
+            <el-form-item label="AccessKey Secret" prop="access_key_secret">
               <el-input
-                v-model="formState.secret_key"
+                v-model="formState.access_key_secret"
                 placeholder="请输入 AccessKey Secret"
                 type="password"
                 size="large"
@@ -128,28 +128,6 @@
                   <el-icon>{{ iconMap.Lock }}</el-icon>
                 </template>
               </el-input>
-            </el-form-item>
-
-            <!-- 验证AccessKey按钮 -->
-            <el-form-item>
-              <el-button
-                type="primary"
-                :loading="validating"
-                :disabled="!canValidateCredentials"
-                @click="validateAccessKey"
-                style="width: 100%; margin-top: 10px;"
-                size="large"
-              >
-                <el-icon v-if="!validating">{{ iconMap.Check }}</el-icon>
-                <span>{{ validating ? '验证中...' : '验证AccessKey' }}</span>
-              </el-button>
-
-              <!-- 验证结果显示 -->
-              <div v-if="accessKeyValidationResult !== null" class="validation-result" :class="accessKeyValidationResult ? 'success' : 'error'">
-                <el-icon v-if="accessKeyValidationResult">{{ iconMap.CircleCheck }}</el-icon>
-                <el-icon v-else>{{ iconMap.CircleClose }}</el-icon>
-                <span>{{ accessKeyValidationMessage }}</span>
-              </div>
             </el-form-item>
 
             <!-- 区域选择 -->
@@ -283,8 +261,8 @@ interface Provider {
   id?: number
   name: string
   type: string
-  access_key: string
-  secret_key: string
+  access_key_id: string
+  access_key_secret: string
   region?: string
 }
 
@@ -306,17 +284,12 @@ const validationResult = ref<boolean | null>(null)
 const validationError = ref('')
 const formRef = ref()
 
-// AccessKey验证相关数据
-const validating = ref(false)
-const accessKeyValidationResult = ref<boolean | null>(null)
-const accessKeyValidationMessage = ref('')
-
 // 表单数据
 const formState = ref({
   name: '',
   type: '',
-  access_key: '',
-  secret_key: '',
+  access_key_id: '',
+  access_key_secret: '',
   region: ''
 })
 
@@ -360,19 +333,11 @@ const canNextStep = computed(() => {
   }
   if (currentStep.value === 1) {
     return formState.value.name &&
-           formState.value.access_key &&
-           formState.value.secret_key &&
+           formState.value.access_key_id &&
+           formState.value.access_key_secret &&
            (!needsRegion.value || formState.value.region)
   }
   return false
-})
-
-// 是否可以验证AccessKey
-const canValidateCredentials = computed(() => {
-  return formState.value.type &&
-         formState.value.access_key &&
-         formState.value.secret_key &&
-         (!needsRegion.value || formState.value.region)
 })
 
 // 表单验证规则
@@ -383,10 +348,10 @@ const rules = {
   type: [
     { required: true, message: '请选择云厂商类型', trigger: 'change' }
   ],
-  access_key: [
+  access_key_id: [
     { required: true, message: '请输入AccessKey ID', trigger: 'blur' }
   ],
-  secret_key: [
+  access_key_secret: [
     { required: true, message: '请输入AccessKey Secret', trigger: 'blur' }
   ],
   region: [
@@ -476,49 +441,6 @@ function prevStep() {
   }
 }
 
-// 验证AccessKey
-async function validateAccessKey() {
-  if (!canValidateCredentials.value) {
-    ElMessage.warning('请先填写完整的AccessKey信息')
-    return
-  }
-
-  validating.value = true
-  accessKeyValidationResult.value = null
-  accessKeyValidationMessage.value = ''
-
-  try {
-    const response = await validateProvider({
-      type: formState.value.type,
-      access_key: formState.value.access_key,
-      secret_key: formState.value.secret_key,
-      region: formState.value.region
-    })
-
-    if (response.code === 200) {
-      accessKeyValidationResult.value = response.data.valid
-      accessKeyValidationMessage.value = response.data.message || (response.data.valid ? 'AccessKey验证成功' : 'AccessKey验证失败')
-
-      if (response.data.valid) {
-        ElMessage.success('AccessKey验证成功！')
-      } else {
-        ElMessage.error(accessKeyValidationMessage.value)
-      }
-    } else {
-      accessKeyValidationResult.value = false
-      accessKeyValidationMessage.value = response.message || '验证请求失败'
-      ElMessage.error(accessKeyValidationMessage.value)
-    }
-  } catch (error: any) {
-    console.error('验证AccessKey失败:', error)
-    accessKeyValidationResult.value = false
-    accessKeyValidationMessage.value = error.message || '验证AccessKey时发生错误'
-    ElMessage.error(accessKeyValidationMessage.value)
-  } finally {
-    validating.value = false
-  }
-}
-
 async function validateCredentials() {
   validationResult.value = null
   validationError.value = ''
@@ -526,8 +448,8 @@ async function validateCredentials() {
   try {
     await validateProvider({
       type: formState.value.type,
-      access_key: formState.value.access_key,
-      secret_key: formState.value.secret_key,
+      access_key: formState.value.access_key_id,
+      secret_key: formState.value.access_key_secret,
       region: formState.value.region
     })
     validationResult.value = true
@@ -574,16 +496,11 @@ function resetForm() {
   formState.value = {
     name: '',
     type: '',
-    access_key: '',
-    secret_key: '',
+    access_key_id: '',
+    access_key_secret: '',
     region: ''
   }
   availableRegions.value = []
-
-  // 重置AccessKey验证状态
-  validating.value = false
-  accessKeyValidationResult.value = null
-  accessKeyValidationMessage.value = ''
 }
 
 // 暴露方法给父组件
@@ -938,32 +855,5 @@ defineExpose({
 
 :deep(.el-tooltip__popper) {
   z-index: 99999 !important;
-}
-
-/* AccessKey验证结果样式 */
-.validation-result {
-  margin-top: 10px;
-  padding: 8px 12px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  font-size: 13px;
-}
-
-.validation-result.success {
-  background: #f0f9f0;
-  border: 1px solid #b3e19d;
-  color: #67c23a;
-}
-
-.validation-result.error {
-  background: #fef0f0;
-  border: 1px solid #fbc4c4;
-  color: #f56c6c;
-}
-
-.validation-result .el-icon {
-  margin-right: 6px;
-  font-size: 14px;
 }
 </style>

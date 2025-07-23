@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>下拉框z-index测试</title>
+    <style>
+        /* 模拟模态框样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 500px;
+            z-index: 2001;
+            position: relative;
+        }
+        
+        /* 下拉框修复样式 */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-button {
+            background: white;
+            border: 1px solid #ccc;
+            padding: 8px 12px;
+            cursor: pointer;
+            width: 200px;
+            text-align: left;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            border: 1px solid #ccc;
+            border-top: none;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 99999999;
+            display: none;
+        }
+        
+        .dropdown-menu.show {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* 测试按钮 */
+        .test-button {
+            margin: 10px;
+            padding: 10px 20px;
+            background: #409eff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>下拉框z-index测试页面</h1>
+    
+    <button class="test-button" onclick="openModal()">打开模态框测试</button>
+    
+    <!-- 模态框 -->
+    <div id="modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h3>模态框内容</h3>
+            <p>这是一个模拟的模态框，z-index为2001</p>
+            
+            <div class="dropdown">
+                <div class="dropdown-button" onclick="toggleDropdown()">
+                    <span id="selected-text">请选择区域</span>
+                    <span style="float: right;">▼</span>
+                </div>
+                <div id="dropdown-menu" class="dropdown-menu">
+                    <div class="dropdown-item" onclick="selectItem('北京')">北京</div>
+                    <div class="dropdown-item" onclick="selectItem('成都')">成都</div>
+                    <div class="dropdown-item" onclick="selectItem('重庆')">重庆</div>
+                    <div class="dropdown-item" onclick="selectItem('广州')">广州</div>
+                    <div class="dropdown-item" onclick="selectItem('中国香港')">中国香港</div>
+                    <div class="dropdown-item" onclick="selectItem('孟买')">孟买</div>
+                    <div class="dropdown-item" onclick="selectItem('首尔')">首尔</div>
+                    <div class="dropdown-item" onclick="selectItem('上海')">上海</div>
+                    <div class="dropdown-item" onclick="selectItem('新加坡')">新加坡</div>
+                    <div class="dropdown-item" onclick="selectItem('东京')">东京</div>
+                    <div class="dropdown-item" onclick="selectItem('法兰克福')">法兰克福</div>
+                    <div class="dropdown-item" onclick="selectItem('弗吉尼亚')">弗吉尼亚</div>
+                    <div class="dropdown-item" onclick="selectItem('硅谷')">硅谷</div>
+                </div>
+            </div>
+            
+            <br><br>
+            <button class="test-button" onclick="closeModal()">关闭模态框</button>
+            
+            <div style="margin-top: 20px; font-size: 12px; color: #666;">
+                <p>测试说明：</p>
+                <ul>
+                    <li>模态框z-index: 2001</li>
+                    <li>下拉框z-index: 99999999</li>
+                    <li>如果下拉框选项能正常显示和选择，说明修复成功</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function openModal() {
+            document.getElementById('modal').style.display = 'flex';
+        }
+        
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+            document.getElementById('dropdown-menu').classList.remove('show');
+        }
+        
+        function toggleDropdown() {
+            const menu = document.getElementById('dropdown-menu');
+            menu.classList.toggle('show');
+        }
+        
+        function selectItem(text) {
+            document.getElementById('selected-text').textContent = text;
+            document.getElementById('dropdown-menu').classList.remove('show');
+            console.log('已选择:', text);
+        }
+        
+        // 点击外部关闭下拉框
+        document.addEventListener('click', function(event) {
+            const dropdown = document.querySelector('.dropdown');
+            if (!dropdown.contains(event.target)) {
+                document.getElementById('dropdown-menu').classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>

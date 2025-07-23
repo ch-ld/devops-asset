@@ -18,7 +18,7 @@ const { VITE_API_URL, VITE_WITH_CREDENTIALS } = import.meta.env
 
 const axiosInstance = axios.create({
   timeout: REQUEST_TIMEOUT, // 请求超时时间(毫秒)
-  baseURL: VITE_API_URL, // API地址
+  baseURL: '', // 使用相对路径，通过Vite代理
   withCredentials: VITE_WITH_CREDENTIALS === 'true', // 是否携带cookie，默认关闭
   transformRequest: [(data) => JSON.stringify(data)], // 请求数据转换为 JSON 字符串
   validateStatus: (status) => status >= 200 && status < 300, // 只接受 2xx 的状态码
@@ -63,16 +63,18 @@ axiosInstance.interceptors.request.use(
 // 响应拦截器
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse<Api.Http.BaseResponse>) => {
-    const { code, msg } = response.data
+    const { code, message, msg } = response.data
+    // 兼容后端返回的 message 字段和前端期望的 msg 字段
+    const errorMessage = message || msg
 
     switch (code) {
       case ApiStatus.success:
         return response
       case ApiStatus.unauthorized:
         logOut()
-        throw new HttpError(msg || '未授权', ApiStatus.unauthorized)
+        throw new HttpError(errorMessage || '未授权', ApiStatus.unauthorized)
       default:
-        throw new HttpError(msg || '请求失败', code)
+        throw new HttpError(errorMessage || '请求失败', code)
     }
   },
   (error) => {

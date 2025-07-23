@@ -115,7 +115,7 @@
   import { ref, watch } from 'vue'
   import { ElMessage } from 'element-plus'
   import { Upload, Download } from '@element-plus/icons-vue'
-  import * as hostApi from '@/api/system/host'
+  import { batchImportHosts, batchExportHosts } from '@/api/system/host'
   import type { BatchOperationResult } from '@/types/api/host'
 
   const props = defineProps<{
@@ -165,7 +165,7 @@
 
     loading.value = true
     try {
-      const result = await hostApi.batchImportHosts(selectedFile.value)
+      const result = await batchImportHosts(selectedFile.value)
       // API 返回的是 { data: BatchOperationResult } 结构
       importResult.value = result
       currentStep.value = 1
@@ -186,7 +186,7 @@
 
     loading.value = true
     try {
-      const result = await hostApi.batchImportHosts(selectedFile.value)
+      const result = await batchImportHosts(selectedFile.value)
       // API 返回的是 { data: BatchOperationResult } 结构
       importResult.value = result
       currentStep.value = 2

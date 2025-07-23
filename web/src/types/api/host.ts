@@ -139,4 +139,16 @@ export interface FileInfo {
   owner: string;
   group: string;
   mod_time: string;
-} 
+}
+
+export interface HostGroup {
+  id: number;
+  name: string;
+  parent_id?: number;
+  sort: number;
+  description?: string;
+  host_count?: number;
+  children?: HostGroup[];
+  created_at: string;
+  updated_at: string;
+}
