@@ -618,7 +618,10 @@ const fetchHostList = async () => {
     const params = {
       page: pagination.current || 1,
       page_size: pagination.pageSize || 20,
-      ...searchForm
+      name: searchForm.name,
+      ip: searchForm.ip,
+      status: searchForm.status,
+      group_id: searchForm.group_id
     }
     console.log('开始获取主机列表，参数:', params)
     const response = await getHostListWithCount(params)
