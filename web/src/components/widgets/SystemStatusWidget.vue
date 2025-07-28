@@ -2,7 +2,7 @@
   <div class="system-status-widget">
     <div class="widget-header">
       <h3 class="widget-title">
-        <i class="el-icon-monitor"></i>
+        <i class="iconfont-sys">&#xe642;</i>
         系统状态
       </h3>
       <div class="status-indicator" :class="overallStatus.toLowerCase()">
@@ -55,31 +55,31 @@
     <div class="status-details">
       <div class="detail-grid">
         <div class="detail-item">
-          <i class="el-icon-time"></i>
+          <i class="iconfont-sys">&#xe650;</i>
           <div class="detail-content">
             <div class="detail-label">运行时间</div>
             <div class="detail-value">{{ systemMetrics.uptime }}</div>
           </div>
         </div>
-        
+
         <div class="detail-item">
-          <i class="el-icon-connection"></i>
+          <i class="iconfont-sys">&#xe651;</i>
           <div class="detail-content">
             <div class="detail-label">在线用户</div>
             <div class="detail-value">{{ systemMetrics.onlineUsers }}</div>
           </div>
         </div>
-        
+
         <div class="detail-item">
-          <i class="el-icon-document"></i>
+          <i class="iconfont-sys">&#xe64f;</i>
           <div class="detail-content">
             <div class="detail-label">今日请求</div>
             <div class="detail-value">{{ systemMetrics.requests }}</div>
           </div>
         </div>
-        
+
         <div class="detail-item">
-          <i class="el-icon-warning"></i>
+          <i class="iconfont-sys">&#xe652;</i>
           <div class="detail-content">
             <div class="detail-label">错误数量</div>
             <div class="detail-value">{{ systemMetrics.errors }}</div>
@@ -90,11 +90,11 @@
     
     <div class="widget-footer">
       <el-button type="primary" size="small" @click="refreshStatus" :loading="refreshing" link>
-        <i class="el-icon-refresh"></i>
+        <i class="iconfont-sys">&#xe643;</i>
         刷新状态
       </el-button>
       <el-button type="primary" size="small" @click="viewDetails" link>
-        <i class="el-icon-view"></i>
+        <i class="iconfont-sys">&#xe653;</i>
         查看详情
       </el-button>
     </div>

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import axios from 'axios'
 import type {
   Provider,
   Host,
@@ -98,7 +99,8 @@ export const useHostStore = defineStore('hostStore', () => {
     isLoading.value = true
     try {
       const response = await hostApi.getHostGroupTree()
-      hostGroupTree.value = response as HostGroup[]
+      // 处理后端返回的数据结构 {code, status, message, data, timestamp}
+      hostGroupTree.value = (response as any)?.data || response as HostGroup[] || []
     } catch (error) {
       console.error('Failed to fetch host group tree:', error)
       // 确保即使API调用失败，hostGroupTree也是一个空数组而不是undefined
@@ -180,20 +182,49 @@ export const useHostStore = defineStore('hostStore', () => {
     error.value = null
 
     try {
-      const { page = pagination.value.page, page_size = pagination.value.pageSize } = params || {}
+      // 构建API参数，只传递有值的参数
+      const apiParams: any = {
+        page: 1,
+        page_size: 100  // 后端限制最大值为100
+      }
 
-      const response = await hostApi.getHostList({
-        ...params,
-        page,
-        page_size
-      })
+      // 只有当参数有值时才添加到请求中
+      if (params?.keyword) apiParams.keyword = params.keyword
+      if (params?.status) apiParams.status = params.status
+      if (params?.region) apiParams.region = params.region
+      if (params?.group_id) apiParams.group_id = params.group_id
 
-      // 从返回的 response 中正确提取数据和总数
-      hostList.value = response.data || []
-      pagination.value = {
-        page,
-        pageSize: page_size,
-        total: response.total || 0
+      console.log('发送API请求参数:', apiParams)
+      // 使用修复后的API函数
+      const response = await hostApi.getHostList(apiParams)
+
+      // 处理后端返回的数据结构
+      console.log('API响应:', response)
+      console.log('response.data:', response.data)
+      console.log('response.data.data:', response.data?.data)
+
+      if (response && response.data && Array.isArray(response.data)) {
+        // API返回的数据结构：response.data 直接是主机数组
+        console.log('解析的主机数据:', response.data)
+        console.log('主机数据长度:', response.data.length)
+
+        hostList.value = response.data
+        pagination.value = {
+          page: 1,
+          pageSize: response.data.length,
+          total: response.data.length
+        }
+        console.log('主机数据设置成功，数量:', response.data.length)
+      } else {
+        console.log('API响应格式错误或数据为空')
+        console.log('response.data类型:', typeof response.data)
+        console.log('response.data是否为数组:', Array.isArray(response.data))
+        hostList.value = []
+        pagination.value = {
+          page: 1,
+          pageSize: 0,
+          total: 0
+        }
       }
     } catch (err) {
       console.error('Failed to fetch hosts:', err)
@@ -334,6 +365,7 @@ export const useHostStore = defineStore('hostStore', () => {
     fetchHosts,
     getHost,
     addHost,
+    createHost: addHost, // 别名，兼容主机管理页面的调用
     updateHost,
     deleteHost,
 

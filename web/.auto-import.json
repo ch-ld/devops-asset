@@ -310,6 +310,7 @@
     "whenever": true,
     "ElMessage": true,
     "ElTag": true,
-    "ElNotification": true
+    "ElNotification": true,
+    "ElLoading": true
   }
 }

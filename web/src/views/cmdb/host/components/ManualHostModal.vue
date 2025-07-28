@@ -67,6 +67,49 @@
         </el-select>
       </el-form-item>
 
+      <!-- 硬件配置部分 -->
+      <el-divider content-position="left">硬件配置</el-divider>
+
+      <el-row :gutter="16">
+        <el-col :span="8">
+          <el-form-item label="CPU核心数" prop="cpu_cores">
+            <el-input-number
+              v-model="formData.cpu_cores"
+              :min="1"
+              :max="128"
+              placeholder="CPU核心数"
+              style="width: 100%"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="内存(GB)" prop="memory_size">
+            <el-input-number
+              v-model="formData.memory_size"
+              :min="1"
+              :max="1024"
+              placeholder="内存大小"
+              style="width: 100%"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="磁盘(GB)" prop="disk_size">
+            <el-input-number
+              v-model="formData.disk_size"
+              :min="10"
+              :max="10240"
+              placeholder="磁盘大小"
+              style="width: 100%"
+            />
+          </el-form-item>
+        </el-col>
+      </el-row>
+
+      <el-form-item label="实例类型" prop="instance_type">
+        <el-input v-model="formData.instance_type" placeholder="请输入实例类型（可选）" />
+      </el-form-item>
+
       <el-form-item label="状态" prop="status">
         <el-select v-model="formData.status" placeholder="选择状态" style="width: 100%">
           <el-option value="running" label="运行中" />
@@ -146,7 +189,12 @@
     os: '',
     status: 'running',
     region: '',
-    remark: ''
+    remark: '',
+    // 硬件配置
+    cpu_cores: 1,
+    memory_size: 1,
+    disk_size: 20,
+    instance_type: ''
   })
 
   const rules = {
@@ -163,7 +211,10 @@
     ],
     username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
     password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-    os: [{ required: true, message: '请选择操作系统', trigger: 'change' }]
+    os: [{ required: true, message: '请选择操作系统', trigger: 'change' }],
+    cpu_cores: [{ required: true, message: '请输入CPU核心数', trigger: 'blur' }],
+    memory_size: [{ required: true, message: '请输入内存大小', trigger: 'blur' }],
+    disk_size: [{ required: true, message: '请输入磁盘大小', trigger: 'blur' }]
   }
 
   // 监听visible属性变化
@@ -242,7 +293,12 @@
       os: '',
       status: 'running',
       region: '',
-      remark: ''
+      remark: '',
+      // 硬件配置
+      cpu_cores: 1,
+      memory_size: 1,
+      disk_size: 20,
+      instance_type: ''
     })
   }
 
@@ -259,6 +315,9 @@
       ? props.host.private_ip.join(',')
       : props.host.private_ip || ''
 
+    // 处理配置信息
+    const config = props.host.configuration || {}
+
     Object.assign(formData, {
       name: props.host.name || '',
       instance_id: props.host.instance_id || '',
@@ -270,7 +329,12 @@
       os: props.host.os || '',
       status: props.host.status || 'running',
       region: props.host.region || '',
-      remark: props.host.remark || ''
+      remark: props.host.remark || '',
+      // 硬件配置
+      cpu_cores: config.cpu_cores || 1,
+      memory_size: config.memory_size || 1,
+      disk_size: config.disk_size || 20,
+      instance_type: config.instance_type || ''
     })
   }
 
@@ -287,8 +351,21 @@
       const formattedData = {
         ...formData,
         public_ip: formData.public_ip ? formData.public_ip.split(',').map((ip) => ip.trim()) : [],
-        private_ip: formData.private_ip ? formData.private_ip.split(',').map((ip) => ip.trim()) : []
+        private_ip: formData.private_ip ? formData.private_ip.split(',').map((ip) => ip.trim()) : [],
+        // 构建配置信息
+        configuration: {
+          cpu_cores: formData.cpu_cores,
+          memory_size: formData.memory_size,
+          disk_size: formData.disk_size,
+          instance_type: formData.instance_type || ''
+        }
       }
+
+      // 移除单独的硬件配置字段，避免重复
+      delete formattedData.cpu_cores
+      delete formattedData.memory_size
+      delete formattedData.disk_size
+      delete formattedData.instance_type
 
       if (props.isEdit && props.host.id) {
         // 编辑模式

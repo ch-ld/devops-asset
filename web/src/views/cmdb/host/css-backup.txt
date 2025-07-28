@@ -1,0 +1,44 @@
+/* CSS备份 - 主机管理页面菱形字符修复方案 */
+/* 备份时间: 2025-07-24 */
+
+/* 彻底禁用表格行悬浮效果 - 终极解决方案 */
+:deep(.el-table__row):hover {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+:deep(.el-table__row):hover td {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* 禁用所有可能的悬浮状态 */
+:deep(.el-table tbody tr):hover,
+:deep(.el-table tbody tr):hover td,
+:deep(.el-table tbody tr):hover th,
+:deep(.el-table tbody tr):hover .cell,
+:deep(.el-table tbody tr):hover * {
+  background-color: transparent !important;
+  background: transparent !important;
+  color: inherit !important;
+}
+
+/* 强制禁用Element Plus表格的悬浮样式 */
+:deep(.el-table--enable-row-hover .el-table__body tr:hover > td) {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* 禁用悬浮时的所有字体图标和伪元素 */
+:deep(.el-table__row):hover *::before,
+:deep(.el-table__row):hover *::after,
+:deep(.el-table tbody tr):hover *::before,
+:deep(.el-table tbody tr):hover *::after {
+  content: "" !important;
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  font-size: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+}

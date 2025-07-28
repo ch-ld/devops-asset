@@ -8,7 +8,7 @@
     <div class="column-list">
       <div v-for="(element, index) in localColumns" :key="element.prop" class="column-item">
         <div class="column-info">
-          <i class="el-icon-rank drag-handle"></i>
+          <i class="iconfont-sys drag-handle">&#xe648;</i>
           <el-checkbox v-model="element.visible">
             {{ element.label }}
           </el-checkbox>

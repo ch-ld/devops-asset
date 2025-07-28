@@ -6,7 +6,7 @@
         快速操作
       </h3>
       <el-button type="text" size="small" @click="refreshActions">
-        <i class="el-icon-refresh"></i>
+        <i class="iconfont-sys">&#xe643;</i>
       </el-button>
     </div>
     
@@ -19,7 +19,7 @@
         :class="{ disabled: action.disabled }"
       >
         <div class="action-icon" :style="{ background: action.color }">
-          <i :class="action.icon"></i>
+          <i :class="action.icon" v-html="action.iconCode"></i>
         </div>
         <div class="action-content">
           <div class="action-title">{{ action.title }}</div>
@@ -33,7 +33,7 @@
     
     <div class="widget-footer">
       <el-button type="primary" size="small" @click="openCustomize" link>
-        <i class="el-icon-setting"></i>
+        <i class="iconfont-sys">&#xe64c;</i>
         自定义
       </el-button>
     </div>
@@ -73,7 +73,8 @@ const actions = ref<QuickAction[]>([
     id: 'user-management',
     title: '用户管理',
     description: '管理系统用户',
-    icon: 'el-icon-user',
+    icon: 'iconfont-sys',
+    iconCode: '&#xe64d;',
     color: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)',
     route: '/system/user'
   },
@@ -81,7 +82,8 @@ const actions = ref<QuickAction[]>([
     id: 'system-status',
     title: '系统状态',
     description: '查看系统运行状态',
-    icon: 'el-icon-monitor',
+    icon: 'iconfont-sys',
+    iconCode: '&#xe642;',
     color: 'linear-gradient(135deg, #ffa726 0%, #ff7043 100%)',
     action: () => checkSystemStatus()
   },
@@ -89,7 +91,8 @@ const actions = ref<QuickAction[]>([
     id: 'backup-data',
     title: '数据备份',
     description: '备份系统数据',
-    icon: 'el-icon-download',
+    icon: 'iconfont-sys',
+    iconCode: '&#xe64e;',
     color: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
     action: () => backupData()
   },
@@ -97,7 +100,8 @@ const actions = ref<QuickAction[]>([
     id: 'clear-cache',
     title: '清理缓存',
     description: '清理系统缓存',
-    icon: 'el-icon-delete',
+    icon: 'iconfont-sys',
+    iconCode: '&#xe641;',
     color: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
     action: () => clearCache()
   },
@@ -105,7 +109,8 @@ const actions = ref<QuickAction[]>([
     id: 'system-logs',
     title: '系统日志',
     description: '查看操作日志',
-    icon: 'el-icon-document',
+    icon: 'iconfont-sys',
+    iconCode: '&#xe64f;',
     color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
     route: '/system/logs'
   }

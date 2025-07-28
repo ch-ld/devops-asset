@@ -2,7 +2,7 @@
   <div class="announcement-marquee">
     <div class="announcement-content">
       <div class="announcement-icon">
-        <i class="el-icon-bell"></i>
+        <i class="iconfont-sys">&#xe649;</i>
       </div>
       <div class="announcement-label">
         系统公告
@@ -19,7 +19,7 @@
               {{ getTypeLabel(announcement.type) }}
             </span>
             <span class="announcement-text">{{ announcement.title }}</span>
-            <i v-if="announcement.is_pinned === 1" class="pin-icon el-icon-star-on"></i>
+            <i v-if="announcement.is_pinned === 1" class="pin-icon iconfont-sys">&#xe64a;</i>
           </div>
         </div>
         <div v-else class="empty-announcement">
@@ -28,7 +28,7 @@
       </div>
       <div class="announcement-actions">
         <el-button type="text" size="small" @click="handleMoreClick">
-          更多 <i class="el-icon-arrow-right"></i>
+          更多 <i class="iconfont-sys">&#xe64b;</i>
         </el-button>
       </div>
     </div>

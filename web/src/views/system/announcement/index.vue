@@ -12,7 +12,7 @@
         </div>
         <div class="header-actions">
           <el-button type="primary" size="large" @click="handleCreate" class="create-btn">
-            <i class="el-icon-plus"></i>
+            <i class="iconfont-sys">&#xe63f;</i>
             新增公告
           </el-button>
         </div>
@@ -24,7 +24,7 @@
       <div class="search-header">
         <h3 class="search-title">筛选条件</h3>
         <el-button text @click="handleReset" class="reset-btn">
-          <i class="el-icon-refresh"></i>
+          <i class="iconfont-sys">&#xe643;</i>
           重置
         </el-button>
       </div>
@@ -33,12 +33,15 @@
         <el-row :gutter="24">
           <el-col :span="6">
             <el-form-item label="公告标题">
-              <el-input 
-                v-model="searchForm.title" 
-                placeholder="请输入公告标题" 
+              <el-input
+                v-model="searchForm.title"
+                placeholder="请输入公告标题"
                 clearable
-                prefix-icon="el-icon-search"
-              />
+              >
+                <template #prefix>
+                  <i class="iconfont-sys">&#xe654;</i>
+                </template>
+              </el-input>
             </el-form-item>
           </el-col>
           <el-col :span="6">
@@ -61,7 +64,7 @@
           <el-col :span="6">
             <el-form-item>
               <el-button type="primary" @click="handleSearch" class="search-btn">
-                <i class="el-icon-search"></i>
+                <i class="iconfont-sys">&#xe654;</i>
                 搜索
               </el-button>
             </el-form-item>
@@ -109,11 +112,11 @@
           <div class="table-actions">
             <el-button-group>
               <el-button :type="viewMode === 'table' ? 'primary' : ''" @click="viewMode = 'table'">
-                <i class="el-icon-menu"></i>
+                <i class="iconfont-sys">&#xe655;</i>
                 表格视图
               </el-button>
               <el-button :type="viewMode === 'card' ? 'primary' : ''" @click="viewMode = 'card'">
-                <i class="el-icon-copy-document"></i>
+                <i class="iconfont-sys">&#xe656;</i>
                 卡片视图
               </el-button>
             </el-button-group>

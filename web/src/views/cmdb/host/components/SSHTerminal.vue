@@ -9,15 +9,15 @@
       </div>
       <div class="terminal-actions">
         <el-button size="small" @click="handleReconnect" :loading="connecting">
-          <i class="el-icon-refresh"></i>
+          <i class="iconfont-sys">&#xe643;</i>
           重连
         </el-button>
         <el-button size="small" @click="handleClear">
-          <i class="el-icon-delete"></i>
+          <i class="iconfont-sys">&#xe641;</i>
           清屏
         </el-button>
         <el-button size="small" @click="openNewWindow">
-          <i class="el-icon-full-screen"></i>
+          <i class="iconfont-sys">&#xe644;</i>
           新窗口打开
         </el-button>
       </div>

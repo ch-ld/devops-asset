@@ -90,15 +90,15 @@
     <!-- 操作按钮 -->
     <div class="action-buttons">
       <el-button type="primary" @click="handleSSH" :disabled="host?.status !== 'running'">
-        <i class="el-icon-monitor"></i>
+        <i class="iconfont-sys">&#xe642;</i>
         SSH连接
       </el-button>
       <el-button @click="handleSync" :loading="syncing">
-        <i class="el-icon-refresh"></i>
+        <i class="iconfont-sys">&#xe643;</i>
         同步状态
       </el-button>
       <el-button @click="handleEdit">
-        <i class="el-icon-edit"></i>
+        <i class="iconfont-sys">&#xe640;</i>
         编辑
       </el-button>
     </div>
