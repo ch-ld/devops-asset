@@ -1,0 +1,26 @@
+# 应用配置
+APP_MODE=prod
+APP_PORT=8080
+
+# 数据库配置
+DATABASE_TYPE=mysql
+
+# MySQL配置
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=your_password
+MYSQL_DB=devops-asset
+
+# Redis配置
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# JWT配置
+JWT_SECRET=your-secret-key
+JWT_EXPIRATION=12h
+
+# 管理员配置
+ADMIN_PASSWORD=123456
+ADMIN_SALT=your-salt 

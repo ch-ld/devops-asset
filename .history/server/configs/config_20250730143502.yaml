@@ -1,0 +1,62 @@
+# 应用配置
+app:
+  name: "devops-asset"
+  version: "v0.0.1"
+  port: 8080
+  mode: "development"
+  start_time: "2024-01-01 00:00:00"
+  machine_id: 1
+  # aes_key is used for encrypting sensitive data like cloud provider secrets and host passwords.
+  # It MUST be changed to a random 32-byte string for production use.
+  # You can generate one using: openssl rand -base64 24
+  aes_key: "plsc_change_this_default_aes_key!"
+
+# 数据库配置
+database:
+  type: "mysql" 
+  mysql:
+    host: "localhost"
+    port: 3306
+    username: "root"
+    password: "password"
+    database: "devops-asset"
+    charset: "utf8mb4"
+    parseTime: true
+    loc: "Local"
+
+# Redis配置
+redis:
+  host: "127.0.0.1"
+  port: 6379
+  password: ""
+  db: 0
+
+# JWT配置
+jwt:
+  secret: "CvXPiv34e2474LC5Xj7IP"  # 务必在部署前修改
+  expiration: "12h"
+
+# 日志配置
+log:
+  level: "debug"  # debug, info, warn, error
+  maxSize: 50    # MB
+  maxBackups: 3
+  maxAge: 30     # days
+  compress: true
+
+# 管理员配置
+admin:
+  password: "123456"  # 务必修改为自己的密码
+  salt: "rHECMvW3el1zhpdzgx9dY"  # 务必重新生成
+
+# 注册配置
+registration:
+  enabled: true          # 是否开启用户注册功能
+  require_approval: false # 注册后是否需要管理员审批
+  default_role_id: 2     # 注册用户的默认角色ID（普通用户）
+
+# 分页配置
+pagination:
+  defaultPage: 1
+  defaultPageSize: 20
+  maxPageSize: 100 
