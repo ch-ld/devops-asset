@@ -159,4 +159,4 @@ const logOut = (): void => {
 }
 
 export default api
-export { api as request }
+export { request }

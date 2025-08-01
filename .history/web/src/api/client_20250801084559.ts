@@ -126,4 +126,4 @@ const api = {
 }
 
 export default api
-export { api as request }
+export { request }
