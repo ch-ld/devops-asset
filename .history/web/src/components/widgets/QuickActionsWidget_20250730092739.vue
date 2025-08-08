@@ -55,7 +55,6 @@ interface QuickAction {
   action?: () => void
   badge?: string | number
   disabled?: boolean
-  iconCode?: string
 }
 
 const router = useRouter()
@@ -78,15 +77,6 @@ const actions = ref<QuickAction[]>([
     iconCode: '&#xe64d;',
     color: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)',
     route: '/system/user'
-  },
-  {
-    id: 'workspace-rules',
-    title: '工作区规则',
-    description: '打开开发规范与接口约定文档',
-    icon: 'iconfont-sys',
-    iconCode: '&#xe650;',
-    color: 'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)',
-    action: () => window.open('/docs/workspace-rules.md', '_blank')
   },
   {
     id: 'system-status',

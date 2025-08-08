@@ -55,7 +55,6 @@ interface QuickAction {
   action?: () => void
   badge?: string | number
   disabled?: boolean
-  iconCode?: string
 }
 
 const router = useRouter()
