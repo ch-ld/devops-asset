@@ -425,40 +425,48 @@ watch(() => props.visible, (visible) => {
 <style scoped lang="scss">
 .record-modal {
   :deep(.el-dialog) {
-    border-radius: 16px;
+    border-radius: 8px;
     overflow: hidden;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e1e4e8;
   }
 
   :deep(.el-dialog__header) {
     padding: 0;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.3);
   }
 
   :deep(.el-dialog__body) {
     padding: 32px;
+    background: transparent;
   }
 
   :deep(.el-dialog__footer) {
-    padding: 24px 32px;
-    border-top: 1px solid #f0f0f0;
-    background: #fafafa;
+    padding: 16px 24px;
+    border-top: 1px solid #e1e4e8;
+    background: #f6f8fa;
   }
 
   .modal-header {
     display: flex;
     align-items: center;
     gap: 16px;
-    padding: 24px 32px;
+    padding: 24px;
+    background: #0366d6;
+    color: white;
+    border-bottom: 1px solid #e1e4e8;
 
     .header-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.15);
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
+      font-size: 20px;
     }
 
     .header-content {
@@ -466,15 +474,16 @@ watch(() => props.visible, (visible) => {
 
       .modal-title {
         margin: 0 0 4px 0;
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 600;
-        color: #1a1a1a;
+        color: white;
       }
 
       .modal-subtitle {
         margin: 0;
         font-size: 14px;
-        color: #8c8c8c;
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 400;
       }
     }
   }
@@ -482,13 +491,18 @@ watch(() => props.visible, (visible) => {
   .modal-body {
     .record-form {
       :deep(.el-form-item) {
-        margin-bottom: 24px;
+        margin-bottom: 28px;
 
         .el-form-item__label {
-          font-weight: 500;
-          color: #1a1a1a;
-          margin-bottom: 8px;
+          font-weight: 700;
+          color: #1e293b;
+          margin-bottom: 12px;
           line-height: 1.4;
+          font-size: 15px;
+          background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
         .el-form-item__content {
@@ -499,17 +513,24 @@ watch(() => props.visible, (visible) => {
       .form-item-type {
         .type-select {
           :deep(.el-select__wrapper) {
-            border-radius: 8px;
-            border: 1px solid #d9d9d9;
-            transition: all 0.2s;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            padding: 16px 20px;
+            font-size: 15px;
 
             &:hover {
-              border-color: #40a9ff;
+              border-color: #94a3b8;
+              transform: translateY(-1px);
+              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             }
 
             &.is-focused {
-              border-color: #1890ff;
-              box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+              border-color: #667eea;
+              box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+              transform: translateY(-1px);
             }
           }
         }
@@ -519,26 +540,33 @@ watch(() => props.visible, (visible) => {
           justify-content: space-between;
           align-items: center;
           width: 100%;
+          padding: 8px 0;
 
           .option-main {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
 
             .option-type {
-              font-weight: 600;
-              color: #1890ff;
-              min-width: 60px;
+              font-weight: 700;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+              background-clip: text;
+              min-width: 70px;
+              font-size: 16px;
             }
 
             .option-desc {
-              color: #666;
+              color: #64748b;
+              font-weight: 500;
             }
           }
 
           .option-example {
-            font-size: 12px;
-            color: #8c8c8c;
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 500;
           }
         }
       }
@@ -548,32 +576,45 @@ watch(() => props.visible, (visible) => {
         .name-input,
         .value-input {
           :deep(.el-input__wrapper) {
-            border-radius: 8px;
-            border: 1px solid #d9d9d9;
-            transition: all 0.2s;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            padding: 16px 20px;
+            font-size: 15px;
 
             &:hover {
-              border-color: #40a9ff;
+              border-color: #94a3b8;
+              transform: translateY(-1px);
+              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             }
 
             &.is-focus {
-              border-color: #1890ff;
-              box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+              border-color: #667eea;
+              box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+              transform: translateY(-1px);
             }
           }
 
           :deep(.el-textarea__inner) {
-            border-radius: 8px;
-            border: 1px solid #d9d9d9;
-            transition: all 0.2s;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            padding: 16px 20px;
+            font-size: 15px;
+            line-height: 1.6;
 
             &:hover {
-              border-color: #40a9ff;
+              border-color: #94a3b8;
+              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             }
 
             &:focus {
-              border-color: #1890ff;
-              box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+              border-color: #667eea;
+              box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
             }
           }
         }
@@ -581,47 +622,105 @@ watch(() => props.visible, (visible) => {
 
       .form-help {
         display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 13px;
-        color: #8c8c8c;
-        margin-top: 8px;
-        line-height: 1.4;
+        align-items: flex-start;
+        gap: 8px;
+        font-size: 14px;
+        color: #64748b;
+        margin-top: 12px;
+        line-height: 1.5;
+        padding: 12px 16px;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-radius: 10px;
+        border: 1px solid rgba(226, 232, 240, 0.5);
 
         .el-icon {
-          color: #40a9ff;
-          font-size: 14px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          font-size: 16px;
+          margin-top: 2px;
+          flex-shrink: 0;
         }
       }
 
       .domain-suffix {
-        color: #8c8c8c;
-        font-size: 14px;
-        font-weight: 500;
+        color: #64748b;
+        font-size: 15px;
+        font-weight: 600;
+        background: rgba(102, 126, 234, 0.1);
+        padding: 4px 8px;
+        border-radius: 6px;
       }
 
       .form-item-line,
       .form-item-ttl,
       .form-item-priority {
-        margin-bottom: 20px;
+        margin-bottom: 24px;
 
         .line-select,
         .ttl-select,
         .priority-input {
           :deep(.el-select__wrapper),
           :deep(.el-input__wrapper) {
-            border-radius: 6px;
-            border: 1px solid #d9d9d9;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            padding: 16px 20px;
+            font-size: 15px;
 
             &:hover {
-              border-color: #40a9ff;
+              border-color: #94a3b8;
+              transform: translateY(-1px);
+              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             }
 
             &.is-focused,
             &.is-focus {
-              border-color: #1890ff;
-              box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+              border-color: #667eea;
+              box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+              transform: translateY(-1px);
             }
+          }
+        }
+      }
+
+      :deep(.el-input-number) {
+        width: 100%;
+        
+        .el-input__wrapper {
+          border-radius: 12px;
+          border: 2px solid #e2e8f0;
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(10px);
+          transition: all 0.3s ease;
+          padding: 16px 20px;
+
+          &:hover {
+            border-color: #94a3b8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+          }
+
+          &.is-focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+            transform: translateY(-1px);
+          }
+        }
+        
+        .el-input-number__decrease,
+        .el-input-number__increase {
+          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+          border: none;
+          color: #64748b;
+          transition: all 0.3s ease;
+          
+          &:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
           }
         }
       }
@@ -631,20 +730,37 @@ watch(() => props.visible, (visible) => {
   .dialog-footer {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
+    gap: 16px;
 
     :deep(.el-button) {
-      border-radius: 6px;
-      font-weight: 500;
-      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      padding: 14px 28px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+
+      &.el-button--default {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-color: #e2e8f0;
+        color: #64748b;
+        
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+          border-color: #94a3b8;
+          color: #475569;
+        }
+      }
 
       &.el-button--primary {
-        background: #1890ff;
-        border-color: #1890ff;
+        background: #0366d6;
+        border-color: #0366d6;
 
         &:hover {
-          background: #40a9ff;
-          border-color: #40a9ff;
+          background: #0256cc;
+          border-color: #0256cc;
         }
       }
     }

@@ -1324,13 +1324,12 @@ onMounted(() => {
   }
 
   &.el-button--warning {
-    background: rgba(250, 140, 22, 0.12);
-    color: #fa8c16;
-    border: 1px solid rgba(250, 140, 22, 0.3);
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border: none;
 
     &:hover {
-      background: rgba(250, 140, 22, 0.18);
-      box-shadow: none;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
     }
   }
 }

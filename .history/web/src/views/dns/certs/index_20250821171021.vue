@@ -1291,46 +1291,33 @@ onMounted(() => {
     }
   }
 
-  &.el-button--primary:not(.is-link) {
-    background: #0366d6;
-    border: 1px solid #0366d6;
-    color: #fff;
+  &.el-button--primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
 
     &:hover {
-      background: #0256cc;
-      border-color: #0256cc;
       transform: translateY(-2px);
-      box-shadow: none;
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
     }
   }
 
-  &.is-link {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    color: #0366d6;
-    padding: 0 4px;
-  }
-
   &.el-button--success {
-    background: rgba(16, 185, 129, 0.12);
-    color: #059669;
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
 
     &:hover {
-      background: rgba(16, 185, 129, 0.18);
-      box-shadow: none;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
     }
   }
 
   &.el-button--warning {
-    background: rgba(250, 140, 22, 0.12);
-    color: #fa8c16;
-    border: 1px solid rgba(250, 140, 22, 0.3);
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border: none;
 
     &:hover {
-      background: rgba(250, 140, 22, 0.18);
-      box-shadow: none;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
     }
   }
 }

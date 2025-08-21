@@ -485,4 +485,4 @@ const resetModal = () => {
     }
   }
 }
-</style>
+

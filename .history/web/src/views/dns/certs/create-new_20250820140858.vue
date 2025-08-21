@@ -1193,13 +1193,13 @@ onUnmounted(() => {
 
               .error-icon {
                 font-size: 24px;
-                color: #ff4d4f;
+                color: #ef4444;
               }
 
               .error-title {
                 font-size: 18px;
                 font-weight: 600;
-                color: #ff7875;
+                color: #dc2626;
               }
             }
 

@@ -1242,25 +1242,14 @@ onMounted(async () => {
               box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
             }
             
-            &.el-button--primary:not(.is-link) {
-              background: #0366d6;
-              border: 1px solid #0366d6;
-              color: #fff;
-
-              &:hover {
-                background: #0256cc;
-                border-color: #0256cc;
-                transform: translateY(-2px);
-                box-shadow: none;
-              }
-            }
-
-            &.is-link {
-              background: transparent;
+            &.el-button--primary {
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
               border: none;
-              box-shadow: none;
-              color: #0366d6;
-              padding: 0 4px;
+              
+              &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+              }
             }
           }
         }
@@ -1371,25 +1360,14 @@ onMounted(async () => {
             padding: 12px 20px;
             transition: all 0.3s ease;
             
-            &.el-button--primary:not(.is-link) {
-              background: #0366d6;
-              border: 1px solid #0366d6;
-              color: #fff;
-
-              &:hover {
-                background: #0256cc;
-                border-color: #0256cc;
-                transform: translateY(-2px);
-                box-shadow: none;
-              }
-            }
-
-            &.is-link {
-              background: transparent;
+            &.el-button--primary {
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
               border: none;
-              box-shadow: none;
-              color: #0366d6;
-              padding: 0 4px;
+              
+              &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+              }
             }
           }
         }
@@ -1621,12 +1599,11 @@ onMounted(async () => {
         }
         
         &.el-button--danger {
-          background: #fff;
-          color: #ff4d4f;
-          border: 1px solid rgba(255,77,79,0.4);
+          background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+          border: none;
 
           &:hover {
-            background: rgba(255,77,79,0.06);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
           }
         }
         
@@ -1790,23 +1767,32 @@ onMounted(async () => {
     }
 
     .sync-error {
-      display: inline-flex;
+      display: flex;
       align-items: center;
       gap: 6px;
       font-size: 12px;
       color: #ff4d4f;
-      font-weight: 600;
-      background: rgba(255, 77, 79, 0.1);
-      border: 1px solid rgba(255, 77, 79, 0.2);
-      padding: 2px 8px;
-      border-radius: 10px;
+      font-weight: 500;
 
       .error-icon {
-        font-size: 14px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:hover {
+          color: #ff7875;
+          transform: scale(1.1);
+        }
       }
 
       .error-text {
-        text-decoration: none;
+        cursor: pointer;
+        text-decoration: underline;
+        transition: all 0.3s ease;
+
+        &:hover {
+          color: #ff7875;
+        }
       }
     }
   }
@@ -1831,26 +1817,14 @@ onMounted(async () => {
     }
   }
 
-  &.el-button--primary:not(.is-link) {
+  &.el-button--primary {
     background: #0366d6;
     border: 1px solid #0366d6;
-    color: #fff;
 
     &:hover {
       background: #0256cc;
       border-color: #0256cc;
     }
-  }
-
-  &.is-link {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    color: #0366d6;
-    padding: 0;
-    height: auto;
-    line-height: inherit;
-    border-radius: 4px;
   }
 
   &.el-button--success {
@@ -1874,13 +1848,12 @@ onMounted(async () => {
   }
 
   &.el-button--danger {
-    background: #fff;
-    color: #ff4d4f;
-    border: 1px solid rgba(255,77,79,0.4);
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border: none;
 
     &:hover {
-      background: rgba(255, 77, 79, 0.06);
-      box-shadow: none;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
     }
   }
 }
@@ -1889,38 +1862,33 @@ onMounted(async () => {
 :deep(.el-tag) {
   border-radius: 8px;
   font-weight: 600;
-  border: 1px solid rgba(0,0,0,0.06);
-  padding: 2px 10px;
-  backdrop-filter: none;
+  border: none;
+  padding: 4px 12px;
+  backdrop-filter: blur(10px);
 
   &.el-tag--success {
-    background: var(--chip-bg-success);
-    color: var(--chip-text-success);
-    border-color: var(--chip-border-success);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
   }
 
   &.el-tag--warning {
-    background: var(--chip-bg-warning);
-    color: var(--chip-text-warning);
-    border-color: var(--chip-border-warning);
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
   }
 
   &.el-tag--danger {
-    background: var(--chip-bg-danger);
-    color: var(--chip-text-danger);
-    border-color: var(--chip-border-danger);
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
   }
 
   &.el-tag--info {
-    background: var(--chip-bg-info);
-    color: var(--chip-text-info);
-    border-color: var(--chip-border-info);
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    color: white;
   }
 
   &.el-tag--primary {
-    background: var(--chip-bg-primary);
-    color: var(--chip-text-primary);
-    border-color: var(--chip-border-primary);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
   }
 }
 
@@ -2055,10 +2023,7 @@ onMounted(async () => {
 
         .domain-tag {
           font-size: 12px;
-          font-weight: 600;
-          background: rgba(3,102,214,0.08);
-          border: 1px solid rgba(3,102,214,0.2);
-          color: #024faf;
+          font-weight: 500;
         }
       }
     }

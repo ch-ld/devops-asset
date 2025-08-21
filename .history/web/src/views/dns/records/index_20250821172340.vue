@@ -1889,38 +1889,34 @@ onMounted(async () => {
 :deep(.el-tag) {
   border-radius: 8px;
   font-weight: 600;
-  border: 1px solid rgba(0,0,0,0.06);
-  padding: 2px 10px;
-  backdrop-filter: none;
+  border: none;
+  padding: 4px 12px;
+  backdrop-filter: blur(10px);
 
   &.el-tag--success {
-    background: var(--chip-bg-success);
-    color: var(--chip-text-success);
-    border-color: var(--chip-border-success);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
   }
 
   &.el-tag--warning {
-    background: var(--chip-bg-warning);
-    color: var(--chip-text-warning);
-    border-color: var(--chip-border-warning);
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
   }
 
   &.el-tag--danger {
-    background: var(--chip-bg-danger);
-    color: var(--chip-text-danger);
-    border-color: var(--chip-border-danger);
+    background: rgba(255, 77, 79, 0.1);
+    color: #ff4d4f;
+    border: 1px solid rgba(255,77,79,0.2);
   }
 
   &.el-tag--info {
-    background: var(--chip-bg-info);
-    color: var(--chip-text-info);
-    border-color: var(--chip-border-info);
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    color: white;
   }
 
   &.el-tag--primary {
-    background: var(--chip-bg-primary);
-    color: var(--chip-text-primary);
-    border-color: var(--chip-border-primary);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
   }
 }
 

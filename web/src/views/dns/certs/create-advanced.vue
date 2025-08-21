@@ -1,86 +1,80 @@
 <template>
-  <div class="cert-create-advanced">
-    <!-- 页面头部 -->
+  <div class="cert-create-page">
+    <!-- 简化后的紧凑头部 -->
     <div class="page-header">
-      <div class="header-content">
-        <div class="header-left">
-          <el-button text @click="goBack" class="back-btn" size="large">
-            <el-icon><ArrowLeft /></el-icon>
-            返回
-          </el-button>
-          <div class="header-title">
-            <h1>
-              <el-icon class="title-icon"><Lock /></el-icon>
-              申请SSL证书
-            </h1>
-            <p>专业的SSL证书申请配置，支持多种验证方式和加密算法</p>
-          </div>
-        </div>
-        <div class="header-actions">
-          <el-button @click="goBack" size="large" class="cancel-btn">
-            取消
-          </el-button>
-          <el-button
-            type="primary"
-            :loading="applying"
-            @click="handleApply"
-            :disabled="!canSubmit"
-            size="large"
-            class="apply-btn"
-          >
-            <el-icon><Lightning /></el-icon>
-            {{ applying ? '申请中...' : '申请证书' }}
-          </el-button>
-        </div>
+      <div class="header-left">
+        <el-button text @click="goBack" class="back-btn" size="small">
+          <el-icon><ArrowLeft /></el-icon>
+          返回证书管理
+        </el-button>
+        <div class="divider"></div>
+        <h1>
+          <span class="icon">🔒</span>
+          申请SSL证书
+        </h1>
+      </div>
+      <div class="header-actions">
+        <el-button @click="goBack" class="cancel-btn">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="applying"
+          @click="handleApply"
+          :disabled="!canSubmit"
+          class="apply-btn"
+        >
+          <el-icon><Lightning /></el-icon>
+          {{ applying ? '申请中...' : '申请证书' }}
+        </el-button>
       </div>
     </div>
 
-    <!-- 主要内容区域 -->
-    <div class="main-content">
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px" class="cert-form">
-
-        <!-- 顶部基础信息（两列） -->
-        <div class="form-grid">
-          <!-- 左：证书域名 -->
-          <div class="grid-item">
-            <el-form-item label="证书域名" prop="domainIds">
-              <!-- 域名选择器 -->
-              <el-select
-                v-model="formData.domainIds"
-                multiple
-                placeholder="请选择要申请证书的域名"
-                size="large"
-                :teleported="true"
-                :popper-class="'select-popper-topmost'"
-                style="width: 100%; margin-bottom: 12px;"
-                @change="handleDomainChange"
-              >
-                <el-option
-                  v-for="domain in availableDomains"
-                  :key="domain.id"
-                  :label="domain.name"
-                  :value="domain.id"
+    <!-- 主要内容：左右分栏布局 -->
+    <div class="main-container">
+      <!-- 左侧：配置表单 -->
+      <div class="config-panel">
+        <el-form ref="formRef" :model="formData" :rules="formRules" class="cert-form">
+          
+          <!-- 域名配置卡片 -->
+          <div class="config-card">
+            <div class="card-header">
+              <span class="icon">🌐</span>
+              <span class="title">域名配置</span>
+              <span class="required">*</span>
+            </div>
+            <div class="card-content">
+              <!-- 域名选择 -->
+              <div class="form-row">
+                <el-select
+                  v-model="formData.domainIds"
+                  multiple
+                  placeholder="选择已有域名"
+                  class="domain-select"
+                  @change="handleDomainChange"
                 >
-                  <div class="domain-option">
-                    <span class="domain-name">{{ domain.name }}</span>
-                    <el-tag
-                      :type="domain.status === 'active' ? 'success' : 'warning'"
-                      size="small"
-                    >
-                      {{ domain.status === 'active' ? '正常' : '异常' }}
-                    </el-tag>
-                  </div>
-                </el-option>
-              </el-select>
-
+                  <el-option
+                    v-for="domain in availableDomains"
+                    :key="domain.id"
+                    :label="domain.name"
+                    :value="domain.id"
+                  >
+                    <div class="domain-option">
+                      <span>{{ domain.name }}</span>
+                      <el-tag :type="domain.status === 'active' ? 'success' : 'warning'" size="small">
+                        {{ domain.status === 'active' ? '正常' : '异常' }}
+                      </el-tag>
+                    </div>
+                  </el-option>
+                </el-select>
+              </div>
+              
               <!-- 自定义域名输入 -->
-              <div class="custom-domain-input">
+              <div class="form-row">
                 <el-input
                   v-model="customDomainInput"
-                  placeholder="或者输入自定义域名，如：example.com 或 *.example.com"
-                  size="large"
+                  placeholder="或输入自定义域名，如：example.com 或 *.example.com"
                   @keyup.enter="addCustomDomain"
-                  style="width: 100%;"
                 >
                   <template #append>
                     <el-button @click="addCustomDomain" :disabled="!customDomainInput.trim()">
@@ -89,12 +83,25 @@
                   </template>
                 </el-input>
               </div>
-
-              <!-- 域名示例 -->
-              <div class="domain-examples">
-                <span class="example-label">常用格式：</span>
+              
+              <!-- 已选域名显示 -->
+              <div v-if="formData.domains.length > 0" class="selected-domains">
                 <el-tag
-                  v-for="example in domainExamples"
+                  v-for="domain in formData.domains"
+                  :key="domain"
+                  closable
+                  @close="removeDomainByName(domain)"
+                  :type="domain.startsWith('*') ? 'warning' : 'primary'"
+                >
+                  {{ domain }}
+                </el-tag>
+              </div>
+              
+              <!-- 示例域名 -->
+              <div class="quick-add">
+                <span class="label">快速添加：</span>
+                <el-tag
+                  v-for="example in domainExamples.slice(0, 3)"
                   :key="example"
                   size="small"
                   class="example-tag"
@@ -103,356 +110,273 @@
                   {{ example }}
                 </el-tag>
               </div>
-
-              <div class="domain-help">
-                <el-text type="info" size="small">
-                  支持选择已有域名或自定义输入，支持通配符域名（*.domain.com）和多级域名
-                </el-text>
-              </div>
-
-              <!-- 已选择的域名列表 -->
-              <div v-if="formData.domains.length > 0" class="selected-domains">
-                <el-tag
-                  v-for="domain in formData.domains"
-                  :key="domain"
-                  closable
-                  @close="removeDomainByName(domain)"
-                  class="domain-tag"
-                  :type="domain.startsWith('*') ? 'warning' : 'primary'"
-                >
-                  {{ domain }}
-                </el-tag>
-              </div>
-            </el-form-item>
+            </div>
           </div>
 
-          <!-- 右：邮箱 -->
-          <div class="grid-item">
-            <el-form-item label="邮箱" prop="email">
-              <el-input
-                v-model="formData.email"
-                placeholder="申请人邮箱"
-                size="large"
-                prefix-icon="Message"
-              />
-            </el-form-item>
-          </div>
-        </div>
-
-        <!-- 核心配置（两列网格） -->
-        <div class="form-grid">
-          <!-- 左：域名验证方式 -->
-          <div class="grid-item">
-            <el-form-item label="域名验证方式" prop="challengeType">
-              <el-select
-                v-model="formData.challengeType"
-                placeholder="请选择验证方式"
-                size="large"
-                class="challenge-select"
-                :popper-class="'select-popper-topmost'"
-              >
-                <el-option value="dns" label="DNS直接验证">
-                  <div class="option-content">
-                    <div class="option-main">
-                      <span class="option-label">DNS直接验证</span>
-                      <el-tag type="success" size="small">推荐</el-tag>
-                    </div>
-                    <div class="option-desc">通过DNS记录验证域名所有权</div>
-                  </div>
-                </el-option>
-                <el-option value="cname" label="CNAME代理验证">
-                  <div class="option-content">
-                    <div class="option-main">
-                      <span class="option-label">CNAME代理验证</span>
-                    </div>
-                    <div class="option-desc">通过CNAME记录代理验证</div>
-                  </div>
-                </el-option>
-                <el-option value="http" label="HTTP文件验证">
-                  <div class="option-content">
-                    <div class="option-main">
-                      <span class="option-label">HTTP文件验证</span>
-                    </div>
-                    <div class="option-desc">通过HTTP文件验证域名所有权</div>
-                  </div>
-                </el-option>
-              </el-select>
-            </el-form-item>
-          </div>
-
-          <!-- 右：证书颁发机构 -->
-          <div class="grid-item">
-            <el-form-item label="证书颁发机构" prop="caType">
-              <el-select v-model="formData.caType" placeholder="请选择证书提供商" size="large" class="ca-select" :popper-class="'select-popper-topmost'">
-                <el-option
-                  v-for="provider in caProviders"
-                  :key="provider.type"
-                  :label="provider.name"
-                  :value="provider.type"
-                >
-                  <div class="provider-option">
-                    <div class="provider-name">{{ provider.name }}</div>
-                    <div class="provider-desc">{{ provider.description }}</div>
-                    <el-tag v-if="provider.free" type="success" size="small">免费</el-tag>
-                  </div>
-                </el-option>
-              </el-select>
-            </el-form-item>
-            <ul class="field-tips">
-              <li>Let's Encrypt：推荐，免费</li>
-              <li>ZeroSSL：需EAB授权</li>
-            </ul>
-          </div>
-
-          <!-- DNS解析服务商 -->
-          <div class="grid-item" style="grid-column: 1 / -1;">
-            <el-form-item label="DNS解析服务商" prop="providerId">
-              <el-select
-                v-model="formData.providerId"
-                placeholder="请选择DNS解析服务商"
-                filterable
-                clearable
-                size="large"
-                class="provider-select"
-                :teleported="true"
-                :popper-class="'select-popper-topmost'"
-                style="width: 100%;"
-              >
-                <el-option
-                  v-for="provider in dnsProviders"
-                  :key="Number(provider.id)"
-                  :value="Number(provider.id)"
-                  :label="provider.name"
-                >
-                  <div class="provider-option">
-                    <ProviderIcon :type="provider.type" size="24px" />
-                    <div class="provider-info">
-                      <div class="provider-name">{{ provider.name }}</div>
-                      <div class="provider-type">{{ getProviderTypeName(provider.type) }}</div>
-                    </div>
-                  </div>
-                </el-option>
-              </el-select>
-              <div class="form-tip">
-                选择DNS解析服务商用于自动验证域名所有权，系统将自动创建和删除验证记录
-              </div>
-            </el-form-item>
-          </div>
-        </div>
-
-        <!-- 加密算法 -->
-        <div class="form-section">
-          <div class="section-header">
-            <el-icon><Key /></el-icon>
-            <span>加密算法</span>
-          </div>
-          <div class="section-content">
-            <el-form-item prop="keyType">
-              <el-select
-                v-model="formData.keyType"
-                placeholder="请选择加密算法"
-                size="large"
-                class="key-type-select"
-                :popper-class="'select-popper-topmost'"
-              >
-                <el-option value="RSA2048" label="RSA 2048">
-                  <div class="option-content">
-                    <div class="option-main">
-                      <span class="option-label">RSA 2048</span>
-                      <el-tag type="primary" size="small">推荐</el-tag>
-                    </div>
-                    <div class="option-desc">兼容性好，安全性高</div>
-                  </div>
-                </el-option>
-                <el-option value="RSA1024" label="RSA 1024">
-                  <div class="option-content">
-                    <div class="option-main">
-                      <span class="option-label">RSA 1024</span>
-                    </div>
-                    <div class="option-desc">较低安全性，不推荐</div>
-                  </div>
-                </el-option>
-                <el-option value="RSA3072" label="RSA 3072">
-                  <div class="option-content">
-                    <div class="option-main">
-                      <span class="option-label">RSA 3072</span>
-                    </div>
-                    <div class="option-desc">高安全性，文件较大</div>
-                  </div>
-                </el-option>
-                <el-option value="RSA4096" label="RSA 4096">
-                  <div class="option-content">
-                    <div class="option-main">
-                      <span class="option-label">RSA 4096</span>
-                    </div>
-                    <div class="option-desc">最高安全性，文件最大</div>
-                  </div>
-                </el-option>
-                <el-option value="EC256" label="EC 256">
-                  <div class="option-content">
-                    <div class="option-main">
-                      <span class="option-label">EC 256</span>
-                    </div>
-                    <div class="option-desc">椭圆曲线，高效安全</div>
-                  </div>
-                </el-option>
-                <el-option value="EC384" label="EC 384">
-                  <div class="option-content">
-                    <div class="option-main">
-                      <span class="option-label">EC 384</span>
-                    </div>
-                    <div class="option-desc">椭圆曲线，超高安全</div>
-                  </div>
-                </el-option>
-              </el-select>
-            </el-form-item>
-          </div>
-        </div>
-
-        <!-- 更新天数 -->
-        <div class="form-section">
-          <div class="section-header">
-            <el-icon><Calendar /></el-icon>
-            <span>更新天数</span>
-          </div>
-          <div class="section-content">
-            <el-form-item prop="renewDays">
-              <el-input-number
-                v-model="formData.renewDays"
-                :min="1"
-                :max="90"
-                size="large"
-                class="renew-days-input"
-              />
-              <div class="form-tip">
-                证书到期前多少天自动续期，注意：流水线多少天不后续新证书，请谨慎填写
-              </div>
-            </el-form-item>
-          </div>
-        </div>
-
-        <!-- 自动续期配置 -->
-        <div class="form-section">
-          <div class="section-header">
-            <el-icon><Clock /></el-icon>
-            <span>自动续期</span>
-          </div>
-          <div class="section-content">
-            <el-form-item>
-              <el-switch
-                v-model="formData.autoRenew"
-                active-text="启用自动续期"
-                inactive-text="禁用自动续期"
-                size="large"
-              />
-              <div class="form-tip">
-                启用后，证书将在到期前自动续期
-              </div>
-            </el-form-item>
-          </div>
-        </div>
-
-        <!-- 部署配置 -->
-        <div class="form-section wide">
-          <div class="section-header">
-            <el-icon><Bell /></el-icon>
-            <span>部署配置</span>
-          </div>
-          <div class="section-content">
-            <el-form-item>
-              <el-switch
-                v-model="formData.deployEnabled"
-                active-text="启用自动部署"
-                inactive-text="仅申请证书"
-                size="large"
-              />
-            </el-form-item>
-
-            <div v-if="formData.deployEnabled" class="deploy-config">
-              <el-form-item label="部署主机">
-                <el-select
-                  v-model="formData.deployHosts"
-                  multiple
-                  placeholder="请选择要部署证书的主机"
-                  size="large"
-                  style="width: 100%"
-                  filterable
-                  :loading="hostsLoading"
-                  :teleported="true"
-                  :popper-class="'select-popper-topmost'"
-                >
-                  <el-option
-                    v-for="host in availableHosts"
-                    :key="host.id"
-                    :label="`${host.name} (${host.ip})`"
-                    :value="host.id"
-                  >
-                    <div class="host-option">
-                      <div class="host-info">
-                        <span class="host-name">{{ host.name }}</span>
-                        <span class="host-ip">{{ host.ip }}</span>
+          <!-- 基础信息卡片 -->
+          <div class="config-card">
+            <div class="card-header">
+              <span class="icon">📧</span>
+              <span class="title">基础信息</span>
+            </div>
+            <div class="card-content">
+              <div class="form-grid">
+                <el-form-item label="申请人邮箱" prop="email">
+                  <el-input
+                    v-model="formData.email"
+                    placeholder="用于接收证书通知"
+                    prefix-icon="Message"
+                  />
+                </el-form-item>
+                <el-form-item label="证书提供商" prop="caType">
+                  <el-select v-model="formData.caType">
+                    <el-option
+                      v-for="provider in caProviders"
+                      :key="provider.type"
+                      :label="provider.name"
+                      :value="provider.type"
+                    >
+                      <div class="provider-info">
+                        <span>{{ provider.name }}</span>
+                        <el-tag v-if="provider.free" type="success" size="small">免费</el-tag>
                       </div>
-                      <el-tag
-                        :type="host.status === 'online' ? 'success' : 'danger'"
-                        size="small"
-                      >
-                        {{ host.status === 'online' ? '在线' : '离线' }}
-                      </el-tag>
-                    </div>
-                  </el-option>
-                </el-select>
-                <div class="form-tip">
-                  选择要部署证书的主机，证书申请成功后将自动部署到选择的主机
-                </div>
-              </el-form-item>
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </div>
+          </div>
 
-              <el-form-item label="部署路径">
-                <el-input
-                  v-model="formData.deployPath"
-                  placeholder="证书部署路径，如：/etc/ssl/certs/"
-                  size="large"
-                />
-                <div class="form-tip">
-                  证书文件将部署到指定路径，请确保路径存在且有写入权限
+          <!-- 验证方式卡片 -->
+          <div class="config-card">
+            <div class="card-header">
+              <span class="icon">🔍</span>
+              <span class="title">验证方式</span>
+            </div>
+            <div class="card-content">
+              <div class="verification-tabs">
+                <div 
+                  v-for="method in verificationMethods"
+                  :key="method.value"
+                  class="tab-item"
+                  :class="{ active: formData.challengeType === method.value }"
+                  @click="formData.challengeType = method.value"
+                >
+                  <div class="tab-icon">{{ method.icon }}</div>
+                  <div class="tab-content">
+                    <div class="tab-title">{{ method.label }}</div>
+                    <div class="tab-desc">{{ method.desc }}</div>
+                  </div>
+                  <el-tag v-if="method.recommended" type="success" size="small">推荐</el-tag>
                 </div>
-              </el-form-item>
+              </div>
+              
+              <!-- DNS提供商选择 -->
+              <div v-if="formData.challengeType === 'dns' || formData.challengeType === 'cname'" class="provider-section">
+                <el-form-item label="DNS解析服务商" prop="providerId">
+                  <el-select
+                    v-model="formData.providerId"
+                    placeholder="选择DNS服务商"
+                    filterable
+                  >
+                    <el-option
+                      v-for="provider in dnsProviders"
+                      :key="Number(provider.id)"
+                      :value="Number(provider.id)"
+                      :label="provider.name"
+                    >
+                      <div class="provider-option">
+                        <ProviderIcon :type="provider.type" size="20px" />
+                        <span>{{ provider.name }}</span>
+                        <span class="provider-type">{{ getProviderTypeName(provider.type) }}</span>
+                      </div>
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+              
+              <!-- HTTP验证说明 -->
+              <div v-if="formData.challengeType === 'http'" class="http-notice">
+                <el-alert type="info" :closable="false">
+                  <p>HTTP验证需要在网站根目录创建验证文件，请确保域名可正常访问</p>
+                </el-alert>
+              </div>
+            </div>
+          </div>
 
-              <el-form-item label="重启命令">
-                <el-input
-                  v-model="formData.restartCommand"
-                  placeholder="部署后执行的重启命令，如：systemctl reload nginx"
-                  size="large"
-                />
-                <div class="form-tip">
-                  证书部署完成后执行的命令，用于重启相关服务使证书生效
+          <!-- 高级选项（可折叠） -->
+          <div class="config-card">
+            <div class="card-header" @click="showAdvanced = !showAdvanced">
+              <span class="icon">⚙️</span>
+              <span class="title">高级选项</span>
+              <el-icon class="expand-icon" :class="{ expanded: showAdvanced }">
+                <ArrowDown />
+              </el-icon>
+            </div>
+            <el-collapse-transition>
+              <div v-show="showAdvanced" class="card-content">
+                <div class="form-grid">
+                  <el-form-item label="加密算法">
+                    <el-select v-model="formData.keyType">
+                      <el-option value="RSA2048" label="RSA 2048（推荐）" />
+                      <el-option value="RSA4096" label="RSA 4096" />
+                      <el-option value="EC256" label="EC 256" />
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item label="续期天数">
+                    <el-input-number
+                      v-model="formData.renewDays"
+                      :min="1"
+                      :max="90"
+                    />
+                  </el-form-item>
                 </div>
-              </el-form-item>
+                
+                <div class="toggle-options">
+                  <div class="toggle-item">
+                    <el-switch v-model="formData.autoRenew" />
+                    <span class="toggle-label">启用自动续期</span>
+                  </div>
+                  <div class="toggle-item">
+                    <el-switch v-model="formData.deployEnabled" />
+                    <span class="toggle-label">启用自动部署</span>
+                  </div>
+                </div>
+                
+                <!-- 部署配置 -->
+                <div v-if="formData.deployEnabled" class="deploy-section">
+                  <div class="section-title">部署配置</div>
+                  <el-form-item label="目标主机">
+                    <el-select
+                      v-model="formData.deployHosts"
+                      multiple
+                      placeholder="选择部署主机"
+                      :loading="hostsLoading"
+                    >
+                      <el-option
+                        v-for="host in availableHosts"
+                        :key="host.id"
+                        :label="`${host.name} (${host.ip})`"
+                        :value="host.id"
+                      />
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item label="部署路径">
+                    <el-input
+                      v-model="formData.deployPath"
+                      placeholder="/etc/ssl/certs/"
+                    />
+                  </el-form-item>
+                </div>
+                
+                <!-- 通知配置 -->
+                <div class="notification-section">
+                  <div class="section-title">通知配置</div>
+                  <el-form-item label="通知方式">
+                    <el-radio-group v-model="formData.notificationType">
+                      <el-radio value="default">使用申请邮箱</el-radio>
+                      <el-radio value="custom">自定义邮箱</el-radio>
+                      <el-radio value="none">不接收通知</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                  <el-form-item v-if="formData.notificationType === 'custom'" label="通知邮箱">
+                    <el-input
+                      v-model="formData.notificationEmail"
+                      placeholder="custom@example.com"
+                    />
+                  </el-form-item>
+                </div>
+              </div>
+            </el-collapse-transition>
+          </div>
+
+        </el-form>
+      </div>
+
+      <!-- 右侧：预览和帮助 -->
+      <div class="info-panel">
+        <!-- 配置预览 -->
+        <div class="preview-card">
+          <div class="card-title">
+            <span class="icon">👀</span>
+            配置预览
+          </div>
+          <div class="preview-content">
+            <div class="preview-item">
+              <span class="label">域名数量：</span>
+              <span class="value">{{ formData.domains.length }} 个</span>
+            </div>
+            <div class="preview-item">
+              <span class="label">验证方式：</span>
+              <span class="value">{{ getVerificationName(formData.challengeType) }}</span>
+            </div>
+            <div class="preview-item">
+              <span class="label">证书提供商：</span>
+              <span class="value">{{ getCAName(formData.caType) }}</span>
+            </div>
+            <div class="preview-item">
+              <span class="label">加密算法：</span>
+              <span class="value">{{ formData.keyType }}</span>
+            </div>
+            <div class="preview-item">
+              <span class="label">自动续期：</span>
+              <span class="value">{{ formData.autoRenew ? '已启用' : '已禁用' }}</span>
+            </div>
+            <div class="preview-item">
+              <span class="label">自动部署：</span>
+              <span class="value">{{ formData.deployEnabled ? '已启用' : '已禁用' }}</span>
             </div>
           </div>
         </div>
 
-        <!-- 备注 -->
-        <div class="form-section">
-          <div class="section-header">
-            <el-icon><Document /></el-icon>
-            <span>备注信息</span>
+        <!-- 域名列表 -->
+        <div v-if="formData.domains.length > 0" class="domains-card">
+          <div class="card-title">
+            <span class="icon">📋</span>
+            选择的域名
           </div>
-          <div class="section-content">
-            <el-form-item prop="remark">
-              <el-input
-                v-model="formData.remark"
-                type="textarea"
-                :rows="3"
-                placeholder="请输入备注信息（可选）"
-                maxlength="200"
-                show-word-limit
-                size="large"
-              />
-            </el-form-item>
+          <div class="domains-list">
+            <div
+              v-for="domain in formData.domains"
+              :key="domain"
+              class="domain-item"
+            >
+              <span class="domain-name">{{ domain }}</span>
+              <el-tag v-if="domain.startsWith('*')" type="warning" size="small">通配符</el-tag>
+              <el-button
+                text
+                type="danger"
+                size="small"
+                @click="removeDomainByName(domain)"
+              >
+                <el-icon><Close /></el-icon>
+              </el-button>
+            </div>
           </div>
         </div>
 
-      </el-form>
+        <!-- 帮助信息 -->
+        <div class="help-card">
+          <div class="card-title">
+            <span class="icon">💡</span>
+            使用提示
+          </div>
+          <div class="help-content">
+            <div class="help-item">
+              <strong>域名格式：</strong>
+              <p>支持单域名（example.com）和通配符域名（*.example.com）</p>
+            </div>
+            <div class="help-item">
+              <strong>验证方式：</strong>
+              <p>DNS验证适合大多数场景，HTTP验证需要网站可访问</p>
+            </div>
+            <div class="help-item">
+              <strong>自动续期：</strong>
+              <p>推荐开启，避免证书过期导致的服务中断</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -463,16 +387,8 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
   ArrowLeft,
-  Lock,
   Lightning,
-  Connection,
-  Message,
-  Star,
-  Key,
-  Calendar,
-  Clock,
-  Bell,
-  Document,
+  ArrowDown,
   Close
 } from '@element-plus/icons-vue'
 import { domainApi } from '@/api/dns/domain'
@@ -529,7 +445,74 @@ const formRules = {
     { required: true, message: '请选择验证方式', trigger: 'change' }
   ],
   providerId: [
-    { required: true, message: '请选择DNS解析服务商', trigger: 'change' }
+    {
+      validator: (rule: any, value: any, callback: any) => {
+        // 只有选择DNS验证方式时才需要DNS解析服务商
+        if (formData.challengeType === 'dns' || formData.challengeType === 'cname') {
+          if (!value) {
+            callback(new Error('请选择DNS解析服务商'))
+          } else {
+            callback()
+          }
+        } else {
+          callback()
+        }
+      },
+      trigger: 'change'
+    }
+  ],
+  notificationEmail: [
+    {
+      validator: (rule: any, value: any, callback: any) => {
+        // 只有选择自定义通知时才需要验证邮箱
+        if (formData.notificationType === 'custom') {
+          if (!value || !value.trim()) {
+            callback(new Error('请输入通知邮箱'))
+          } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+            callback(new Error('请输入正确的邮箱格式'))
+          } else {
+            callback()
+          }
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
+  deployHosts: [
+    {
+      validator: (rule: any, value: any, callback: any) => {
+        // 只有启用自动部署时才需要选择主机
+        if (formData.deployEnabled) {
+          if (!value || value.length === 0) {
+            callback(new Error('请选择要部署的主机'))
+          } else {
+            callback()
+          }
+        } else {
+          callback()
+        }
+      },
+      trigger: 'change'
+    }
+  ],
+  deployPath: [
+    {
+      validator: (rule: any, value: any, callback: any) => {
+        // 只有启用自动部署时才需要部署路径
+        if (formData.deployEnabled) {
+          if (!value || !value.trim()) {
+            callback(new Error('请输入部署路径'))
+          } else {
+            callback()
+          }
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
   ]
 }
 
@@ -537,37 +520,50 @@ const formRules = {
 const applying = ref(false)
 const hostsLoading = ref(false)
 const customDomainInput = ref('')
+const showAdvanced = ref(false)
 const dnsProviders = ref<any[]>([])
 const availableDomains = ref<any[]>([])
 const availableHosts = ref<any[]>([])
 const domainExamples = ref([
   'example.com',
   '*.example.com',
-  'www.example.com',
-  'api.example.com',
-  'admin.example.com'
+  'www.example.com'
 ])
 const caProviders = ref([
   {
     type: 'letsencrypt',
     name: "Let's Encrypt",
     description: '免费、自动化的证书颁发机构',
-    free: true,
-    icon: 'Lock'
+    free: true
   },
   {
     type: 'zerossl',
     name: 'ZeroSSL',
     description: '免费SSL证书提供商',
-    free: true,
-    icon: 'Lock'
+    free: true
+  }
+])
+const verificationMethods = ref([
+  {
+    value: 'dns',
+    label: 'DNS验证',
+    desc: '自动创建DNS记录验证',
+    icon: '🌐',
+    recommended: true
   },
   {
-    type: 'buypass',
-    name: 'Buypass',
-    description: '挪威免费证书颁发机构',
-    free: true,
-    icon: 'Lock'
+    value: 'http',
+    label: 'HTTP验证',
+    desc: '网站根目录文件验证',
+    icon: '📁',
+    recommended: false
+  },
+  {
+    value: 'cname',
+    label: 'CNAME验证',
+    desc: '通过CNAME记录代理验证',
+    icon: '🔗',
+    recommended: false
   }
 ])
 const formRef = ref()
@@ -610,9 +606,38 @@ const removeDomainByName = (domainName: string) => {
 }
 
 const validateDomain = (domain: string) => {
-  // 简单的域名验证，支持通配符
-  const domainRegex = /^(\*\.)?[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
-  return domainRegex.test(domain)
+  // 增强的域名验证，支持通配符和多级域名
+  const domainRegex = /^(\*\.)?[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/
+  
+  // 检查基本格式
+  if (!domainRegex.test(domain)) {
+    return false
+  }
+  
+  // 检查域名长度不超过253个字符
+  if (domain.length > 253) {
+    return false
+  }
+  
+  // 检查每个标签不超过63个字符
+  const labels = domain.split('.')
+  for (const label of labels) {
+    if (label.length > 63 || label.length === 0) {
+      return false
+    }
+    
+    // 标签不能以-开头或结尾
+    if (label.startsWith('-') || label.endsWith('-')) {
+      return false
+    }
+  }
+  
+  // 对于通配符域名，确保通配符只在最前面
+  if (domain.includes('*') && !domain.startsWith('*.')) {
+    return false
+  }
+  
+  return true
 }
 
 // 添加自定义域名
@@ -661,6 +686,16 @@ const getProviderTypeName = (type: string) => {
   return names[type] || type
 }
 
+const getVerificationName = (type: string) => {
+  const method = verificationMethods.value.find(m => m.value === type)
+  return method ? method.label : type
+}
+
+const getCAName = (type: string) => {
+  const provider = caProviders.value.find(p => p.type === type)
+  return provider ? provider.name : type
+}
+
 const loadDnsProviders = async () => {
   try {
     const response = await dnsProviderApi.list({
@@ -693,18 +728,45 @@ const loadDomains = async () => {
 const loadHosts = async () => {
   try {
     hostsLoading.value = true
+    
+    // 使用正确的CMDB主机查询API
     const response = await getHostListWithCount({
       page: 1,
-      page_size: 1000,
-      status: 'online' // 只获取在线主机
+      page_size: 100
+      // 移除status过滤，显示所有主机
     })
 
-    // 处理响应数据
-    const data = response?.data || response
-    availableHosts.value = data?.data || data?.list || []
+    console.log('证书创建 - CMDB主机API响应:', response)
+    
+    // 根据API响应结构解析数据
+    // getHostListWithCount返回格式: {code: 200, data: [...], count: 10}
+    let hostList = []
+    
+    if (response && response.data && Array.isArray(response.data)) {
+      // 标准API响应格式
+      hostList = response.data
+    } else if (response && Array.isArray(response)) {
+      // 直接数组格式
+      hostList = response
+    } else {
+      console.warn('证书创建 - 未识别的主机API响应格式:', response)
+      hostList = []
+    }
+    
+    // 映射主机数据，确保字段完整
+    availableHosts.value = hostList.map((host: any) => ({
+      id: host.id,
+      name: host.name || host.hostname || `主机-${host.id}`,
+      ip: host.ip || host.private_ip || host.public_ip || '未知IP',
+      status: host.status || 'unknown',
+      provider: host.provider || host.provider_name || '未知',
+      region: host.region || '未知'
+    }))
+    
+    console.log(`证书创建 - 成功加载 ${availableHosts.value.length} 台主机:`, availableHosts.value)
   } catch (error) {
-    console.error('加载主机列表失败:', error)
-    ElMessage.error('加载主机列表失败')
+    console.error('证书创建 - 加载主机列表失败:', error)
+    ElMessage.error('加载主机列表失败，请确保CMDB主机管理模块正常运行')
   } finally {
     hostsLoading.value = false
   }
@@ -717,8 +779,6 @@ const handleApply = async () => {
     await formRef.value.validate()
     applying.value = true
 
-    // 移除时间处理，不再需要
-
     const requestData = {
       domain_id: Array.isArray(formData.domainIds) && formData.domainIds.length > 0 ? Number(formData.domainIds[0]) : undefined,
       domains: formData.domains,
@@ -729,10 +789,8 @@ const handleApply = async () => {
       key_type: formData.keyType,
       auto_renew: formData.autoRenew,
       renew_days: formData.renewDays,
-      // 通知（如后端未启用会忽略）
       notification_type: formData.notificationType,
       notification_email: formData.notificationEmail || undefined,
-      // 部署
       deploy_hosts: formData.deployEnabled ? formData.deployHosts : [],
       deploy_path: formData.deployEnabled ? formData.deployPath : '',
       restart_command: formData.deployEnabled ? formData.restartCommand : '',
@@ -740,28 +798,29 @@ const handleApply = async () => {
       valid_days: 90
     }
 
-    // 使用更长的超时时间进行证书申请
-    const response = await Promise.race([
-      certificateApi.create(requestData),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('证书申请超时，但后台仍在处理中，请稍后查看证书列表')), 60000)
-      )
-    ])
-
-    ElMessage.success('证书申请成功，正在后台处理中')
+    // 使用异步提交模式，立即返回成功并提示用户
+    ElMessage.success('证书申请已提交，正在后台处理中...')
+    
+    // 跳转到证书列表页面
     router.push('/dns/certs')
+    
+    // 在后台异步处理申请
+    certificateApi.create(requestData).then(() => {
+      console.log('证书申请处理完成')
+    }).catch(error => {
+      console.error('证书申请失败:', error)
+      // 可以在这里添加一些后台错误处理逻辑
+    }).finally(() => {
+      applying.value = false
+    })
+    
   } catch (error: any) {
     console.error('证书申请失败:', error)
-    if (error.message?.includes('超时')) {
-      ElMessage.warning('证书申请可能需要较长时间，请稍后查看证书列表')
-      // 即使超时也跳转到列表页面，因为后台可能仍在处理
-      setTimeout(() => {
-        router.push('/dns/certs')
-      }, 2000)
+    if (error.message?.includes('验证') || error.errors) {
+      ElMessage.error('请检查输入信息是否正确')
     } else {
-      ElMessage.error(error.message || '证书申请失败')
+      ElMessage.error(error.message || '证书申请失败，请稍后重试')
     }
-  } finally {
     applying.value = false
   }
 }
@@ -776,540 +835,459 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.cert-create-advanced {
+.cert-create-page {
   min-height: 100vh;
-  background: #f5f7fa;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
 
-  .page-header {
-    background: white;
-    border-radius: 16px;
-    padding: 32px;
-    margin-bottom: 32px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.8);
-
-    .header-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-
-      .header-left {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-
-        .back-btn {
-          color: #666;
-          font-weight: 500;
-          transition: all 0.3s ease;
-
-          &:hover {
-            color: #409eff;
-            transform: translateX(-2px);
-          }
-        }
-
-        .header-title {
-          h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 700;
-            color: #1a1a1a;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-
-            .title-icon {
-              font-size: 32px;
-              color: #409eff;
-            }
-          }
-
-          p {
-            margin: 8px 0 0 0;
-            color: #666;
-            font-size: 16px;
-            font-weight: 400;
-          }
-        }
-      }
-
-      .header-actions {
-        display: flex;
-        gap: 16px;
-
-        .cancel-btn {
-          border: 2px solid #e4e7ed;
-          color: #606266;
-          font-weight: 500;
-          transition: all 0.3s ease;
-
-          &:hover {
-            border-color: #409eff;
-            color: #409eff;
-          }
-        }
-
-        .apply-btn {
-          background: linear-gradient(135deg, #409eff, #67c23a);
-          border: none;
-          font-weight: 600;
-          box-shadow: 0 4px 16px rgba(64, 158, 255, 0.3);
-          transition: all 0.3s ease;
-
-          &:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(64, 158, 255, 0.4);
-          }
-        }
-      }
-    }
-  }
-
-  .main-content {
-
-    /* 双列表单布局 */
-
-    /* 统一表单UI：紧凑、双列、卡片弱化 */
-    .cert-form{
-      --box-bg:#fff;--box-bd:#ebeef5;--muted:#909399;--title:#303133;
-    }
-    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px 24px;margin-bottom:24px}
-    .grid-item{background:var(--box-bg);border:1px solid var(--box-bd);border-radius:12px;padding:16px 16px 12px}
-    .el-form-item__label{color:#606266;font-weight:500}
-    .el-input, .el-select{width:100%}
-    .field-tips{margin:8px 0 0 0;padding-left:18px;color:var(--muted);font-size:12px;line-height:1.5}
-    .auth-row{display:flex;align-items:center;gap:8px}
-    .status-pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;line-height:18px}
-    .status-pill.warn{background:#fff7e6;color:#d46b08;border:1px solid #ffd591}
-
-
-    /* 覆盖旧定义，使用更紧凑的新版 */
-    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px 24px;margin-bottom:24px}
-    .grid-item{background:var(--box-bg);border:1px solid var(--box-bd);border-radius:12px;padding:16px 16px 12px}
-    .field-tips{margin:8px 0 0 0;padding-left:18px;color:var(--muted);font-size:12px;line-height:1.5}
-
-    max-width: 1000px;
-    margin: 0 auto;
-
-    .cert-form {
-      .form-section {
-        background: white;
-        border-radius: 16px;
-        padding: 32px;
-        margin-bottom: 24px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        transition: all 0.3s ease;
-
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-        }
-
-        .section-header {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 24px;
-          font-size: 18px;
-          font-weight: 600;
-          color: #1a1a1a;
-
-          .el-icon {
-            font-size: 20px;
-            color: #409eff;
-          }
-
-          .required {
-            color: #f56c6c;
-            margin-left: 4px;
-          }
-        }
-
-        .section-content {
-          .el-form-item {
-            margin-bottom: 0;
-          }
-        }
-      }
-    }
-  }
-
-  // 自定义域名输入样式
-  .custom-domain-input {
-    margin-bottom: 12px;
-  }
-
-  .domain-examples {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-
-    .example-label {
-      color: #666;
-      font-size: 14px;
-      white-space: nowrap;
-    }
-
-    .example-tag {
-      cursor: pointer;
-      transition: all 0.3s ease;
-
-      &:hover {
-        transform: scale(1.05);
-        box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
-      }
-    }
-  }
-
-  // 主机选项样式
-  .host-option {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-
-    .host-info {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-
-      .host-name {
-        font-weight: 500;
-        color: #303133;
-      }
-
-      .host-ip {
-        font-size: 12px;
-        color: #909399;
-        margin-top: 2px;
-      }
-    }
-  }
-
-  .domain-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-
-    .domain-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-      border: 1px solid #bae6fd;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 14px;
-
-      .domain-name {
-        color: #0369a1;
-        font-weight: 500;
-      }
-
-      .remove-btn {
-        color: #ef4444;
-        padding: 0;
-        min-width: auto;
-        width: 16px;
-        height: 16px;
-
-        &:hover {
-          background: rgba(239, 68, 68, 0.1);
-        }
-      }
-    }
-  }
-
-  // 提供商信息样式
-  .provider-info {
+// 页面头部
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding: 16px 0;
+  
+  .header-left {
     display: flex;
     align-items: center;
     gap: 16px;
-    padding: 20px;
-    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-    border: 1px solid #bae6fd;
-    border-radius: 12px;
-
-    .provider-logo {
+    
+    .back-btn {
+      color: rgba(255, 255, 255, 0.8);
+      font-weight: 500;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        color: white;
+        transform: translateX(-2px);
+      }
+    }
+    
+    .divider {
+      width: 1px;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+      color: white;
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 8px;
+      
+      .icon {
+        font-size: 24px;
+      }
     }
+  }
+  
+  .header-actions {
+    display: flex;
+    gap: 12px;
+    
+    .cancel-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+    }
+    
+    .apply-btn {
+      background: rgba(255, 255, 255, 0.9);
+      color: #667eea;
+      border: none;
+      font-weight: 600;
+      
+      &:hover {
+        background: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+    }
+  }
+}
 
-    .provider-details {
+// 主要容器：左右分栏
+.main-container {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+// 配置面板
+.config-panel {
+  .cert-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+// 配置卡片
+.config-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 20px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    font-weight: 600;
+    color: #2d3748;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    .icon {
+      font-size: 18px;
+    }
+    
+    .title {
       flex: 1;
-
-      .provider-name {
-        font-size: 16px;
-        font-weight: 600;
-        color: #0369a1;
-
-    // 让下拉弹层不被裁切
-    .provider-select{overflow:visible}
-
-        margin-bottom: 4px;
-      }
-
-      .provider-desc {
-        font-size: 14px;
-        color: #0284c7;
+    }
+    
+    .required {
+      color: #f56c6c;
+    }
+    
+    .expand-icon {
+      transition: transform 0.3s ease;
+      
+      &.expanded {
+        transform: rotate(180deg);
       }
     }
-  }
-
-  // 选择器样式
-  .challenge-select,
-  .provider-select,
-  .key-type-select {
-    width: 100%;
-
-    .option-content {
-      .option-main {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 4px;
-
-        .option-label {
-          font-weight: 500;
-          color: #303133;
-        }
-      }
-
-      .option-desc {
-        font-size: 12px;
-        color: #909399;
-      }
+    
+    &:hover {
+      background: #edf2f7;
     }
   }
+  
+  .card-content {
+    padding: 20px;
+  }
+}
 
-  .provider-option {
+// 表单网格
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-row {
+  margin-bottom: 12px;
+}
+
+// 域名选择相关
+.domain-select {
+  width: 100%;
+}
+
+.domain-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.selected-domains {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.quick-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  
+  .label {
+    color: #666;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  
+  .example-tag {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+}
+
+// 验证方式选项卡
+.verification-tabs {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+  
+  .tab-item {
     display: flex;
     align-items: center;
     gap: 12px;
-
-    .provider-info {
-      .provider-name {
-        font-weight: 500;
-        color: #303133;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    .tab-icon {
+      font-size: 20px;
+    }
+    
+    .tab-content {
+      flex: 1;
+      
+      .tab-title {
+        font-weight: 600;
+        color: #2d3748;
         margin-bottom: 2px;
       }
-
-      .provider-type {
+      
+      .tab-desc {
         font-size: 12px;
-        color: #909399;
+        color: #718096;
       }
     }
+    
+    &.active {
+      border-color: #667eea;
+      background: linear-gradient(135deg, #f0f4ff, #e6f2ff);
+    }
+    
+    &:hover:not(.active) {
+      border-color: #cbd5e0;
+      background: #f7fafc;
+    }
   }
+}
 
-  // 其他组件样式
-  .renew-days-input {
-    width: 200px;
-  }
-
-  .form-tip {
-    margin-top: 8px;
+// 提供商选项
+.provider-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  .provider-type {
     font-size: 12px;
-    color: #909399;
-    line-height: 1.4;
+    color: #718096;
+    margin-left: auto;
   }
+}
 
-  .schedule-config {
-    .schedule-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
+.provider-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-      .schedule-label {
-        font-size: 16px;
-        color: #303133;
-      }
-    }
+// 提供商部分
+.provider-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
 
-    .schedule-note {
-      font-size: 12px;
-      color: #909399;
+// HTTP通知
+.http-notice {
+  margin-top: 16px;
+  
+  .el-alert {
+    border-radius: 8px;
+  }
+}
+
+// 高级选项
+.toggle-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+  
+  .toggle-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    
+    .toggle-label {
+      font-weight: 500;
+      color: #2d3748;
     }
   }
+}
 
-  .notification-config {
-    .custom-notification {
-      margin-top: 16px;
+.deploy-section,
+.notification-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 12px;
+  }
+}
+
+// 信息面板
+.info-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+
+// 预览卡片
+.preview-card,
+.domains-card,
+.help-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  
+  .card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    font-weight: 600;
+    color: #2d3748;
+    
+    .icon {
+      font-size: 16px;
+    }
+  }
+}
+
+.preview-content {
+  .preview-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f5f9;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    .label {
+      color: #718096;
+      font-size: 14px;
+    }
+    
+    .value {
+      color: #2d3748;
+      font-weight: 500;
+      font-size: 14px;
+    }
+  }
+}
+
+.domains-list {
+  .domain-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    margin: 4px 0;
+    background: #f8fafc;
+    border-radius: 8px;
+    
+    .domain-name {
+      flex: 1;
+      color: #2d3748;
+      font-weight: 500;
+    }
+  }
+}
+
+.help-content {
+  .help-item {
+    margin-bottom: 16px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    strong {
+      color: #2d3748;
+      font-size: 14px;
+    }
+    
+    p {
+      margin: 4px 0 0 0;
+      color: #718096;
+      font-size: 13px;
+      line-height: 1.5;
     }
   }
 }
 
 // 响应式设计
+@media (max-width: 1024px) {
+  .main-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .info-panel {
+    position: static;
+  }
+}
+
 @media (max-width: 768px) {
-  .cert-create-advanced {
+  .cert-create-page {
     padding: 16px;
-
-    .page-header {
-      padding: 24px;
-
-      .header-content {
-        flex-direction: column;
-        gap: 20px;
-        align-items: flex-start;
-
-        .header-left {
-          gap: 16px;
-
-          .header-title h1 {
-            font-size: 24px;
-          }
-        }
-
-        .header-actions {
-          width: 100%;
-          justify-content: flex-end;
-        }
-      }
-    }
-
-    .main-content {
-      .cert-form {
-        .form-section {
-          padding: 24px;
-        }
-      }
-    }
-
-    .domain-list {
-      .domain-item {
-        width: 100%;
-        justify-content: space-between;
-      }
-    }
-
-    .provider-info {
-      flex-direction: column;
-      text-align: center;
-    }
-
-    .schedule-config {
-      .schedule-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-      }
-    }
   }
-
-  // 新增样式
-  .domain-option {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-
-    .domain-name {
-      font-weight: 500;
-    }
-  }
-
-  .domain-help {
-    margin-top: 8px;
-  }
-
-  .selected-domains {
-    margin-top: 16px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-
-    .domain-tag {
-      font-size: 14px;
-    }
-  }
-
-  .ca-provider-group {
-    width: 100%;
-    display: flex;
+  
+  .page-header {
     flex-direction: column;
-    gap: 12px;
-
-    .ca-provider-option {
+    gap: 16px;
+    align-items: flex-start;
+    
+    .header-actions {
       width: 100%;
-      margin: 0 !important;
-      margin-right: 0 !important;
-      position: relative;
-      z-index: 1;
-
-      .provider-card {
-        width: 100%;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 16px;
-        transition: all 0.3s ease;
-        background: #fafafa;
-        cursor: pointer;
-        position: relative;
-
-        &:hover {
-          border-color: #409eff;
-          box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
-        }
-
-        .provider-info {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-
-          .provider-logo {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f0f9ff;
-            border-radius: 8px;
-            color: #409eff;
-          }
-
-          .provider-details {
-            flex: 1;
-
-            .provider-name {
-              font-size: 16px;
-              font-weight: 600;
-              color: #1f2937;
-
-  /* 让选择器的弹层拥有更高层级，避免被容器遮挡 */
-  :deep(.select-popper-topmost){
-    z-index: 3000 !important;
-  }
-
-              margin-bottom: 4px;
-            }
-
-            .provider-desc {
-              font-size: 14px;
-              color: #6b7280;
-            }
-          }
-        }
-      }
-
-      &.is-checked .provider-card {
-        border-color: #409eff;
-        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-      }
+      justify-content: flex-end;
     }
   }
-
-  .deploy-config {
-    margin-top: 16px;
-    padding: 16px;
-    background: #f8fafc;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .verification-tabs {
+    .tab-item {
+      .tab-content {
+        .tab-desc {
+          display: none;
+        }
+      }
+    }
   }
 }
 </style>
