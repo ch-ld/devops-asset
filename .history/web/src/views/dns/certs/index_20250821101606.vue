@@ -337,12 +337,6 @@
       :certificate="currentCertificate"
       @refresh="fetchData"
     />
-
-    <!-- 证书下载对话框 -->
-    <CertificateDownloadDialog
-      v-model:visible="showDownloadDialog"
-      :certificate="selectedCertificate"
-    />
   </div>
 </template>
 
@@ -365,7 +359,6 @@ import {
 import { DNSStatCard } from '@/components/dns'
 import CertificateModal from './components/CertificateModal.vue'
 import CertificateDetail from './components/CertificateDetail.vue'
-import CertificateDownloadDialog from '@/components/dns/CertificateDownloadDialog.vue'
 import { certificateApi } from '@/api/dns/certificate'
 import type { Certificate } from '@/types/dns'
 

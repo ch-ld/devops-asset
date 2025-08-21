@@ -191,12 +191,12 @@ export const asyncRoutes: AppRouteRecord[] = [
         }
       },
       {
-        id: 59,
+        id: 3023,
         path: 'certs/import',
         name: 'CertificateImport',
         component: 'dns/certs/import-cert',
         meta: {
-          title: '导入证书',
+          title: '上传证书',
           keepAlive: false,
           roles: ['超级管理员', '管理员', '运维人员'],
           hidden: true

@@ -2,7 +2,7 @@ import api from '../client'
 
 interface Certificate {
   id: number
-  domain_id?: number
+  domain_id: number
   common_name: string
   domain_name?: string // 兼容旧字段
   subject_alt_names?: string[]
@@ -160,7 +160,7 @@ export const certificateApi = {
 
   // 删除证书
   delete: (id: number) =>
-    api.del<{ code: number; message: string }>({
+    api.delete<{ code: number; message: string }>({
       url: `/api/v1/dns/certificates/${id}`
     }),
 

@@ -2,7 +2,7 @@ import api from '../client'
 
 interface Certificate {
   id: number
-  domain_id?: number
+  domain_id: number
   common_name: string
   domain_name?: string // 兼容旧字段
   subject_alt_names?: string[]

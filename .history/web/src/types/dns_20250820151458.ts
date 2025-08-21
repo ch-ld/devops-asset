@@ -133,7 +133,7 @@ export interface DNSProvider {
 // 证书
 export interface Certificate {
   id: number
-  domain_id?: number
+  domain_id: number
   domain?: Domain
   common_name: string
   domain_name?: string

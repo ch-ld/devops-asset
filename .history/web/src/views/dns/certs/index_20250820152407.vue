@@ -337,12 +337,6 @@
       :certificate="currentCertificate"
       @refresh="fetchData"
     />
-
-    <!-- 证书下载对话框 -->
-    <CertificateDownloadDialog
-      v-model:visible="showDownloadDialog"
-      :certificate="selectedCertificate"
-    />
   </div>
 </template>
 
@@ -365,7 +359,6 @@ import {
 import { DNSStatCard } from '@/components/dns'
 import CertificateModal from './components/CertificateModal.vue'
 import CertificateDetail from './components/CertificateDetail.vue'
-import CertificateDownloadDialog from '@/components/dns/CertificateDownloadDialog.vue'
 import { certificateApi } from '@/api/dns/certificate'
 import type { Certificate } from '@/types/dns'
 
@@ -376,9 +369,7 @@ const loading = ref(false)
 const statisticsLoading = ref(false)
 const modalVisible = ref(false)
 const drawerVisible = ref(false)
-const showDownloadDialog = ref(false)
 const currentCertificate = ref<Certificate | null>(null)
-const selectedCertificate = ref<Certificate | null>(null)
 const certificates = ref<Certificate[]>([])
 const statistics = ref({
   total: 0,
@@ -600,12 +591,57 @@ const handleDownload = async (row: Certificate) => {
   try {
     const domainName = row.common_name || row.domain_name || `cert_${row.id}`
 
-    // 显示下载格式选择对话框
-    showDownloadDialog.value = true
-    selectedCertificate.value = row
+    // 使用简洁的选择框
+    const { value: format } = await (ElMessageBox as any).prompt(
+      `为证书 "${domainName}" 选择下载格式`,
+      '下载证书',
+      {
+        confirmButtonText: '下载',
+        cancelButtonText: '取消',
+        inputType: 'select',
+        inputOptions: {
+          'pem': 'PEM - 证书 + 私钥 + 链 (推荐)',
+          'crt': 'CRT - 仅证书文件',
+          'key': 'KEY - 仅私钥文件',
+          'chain': 'CHAIN - 仅证书链'
+        },
+        inputValue: 'pem'
+      }
+    )
+    if (!format) {
+      return
+    }
+
+    // 下载证书
+    ElMessage.info('正在准备下载，请稍候...')
+    const response = await certificateApi.download(row.id, format)
+
+    // 获取文件扩展名
+    const getFileExtension = (format: string) => {
+      const extensionMap: Record<string, string> = {
+        'pem': 'pem',
+        'crt': 'crt',
+        'key': 'key',
+        'chain': 'pem'
+      }
+      return extensionMap[format] || 'txt'
+    }
+
+    // 创建下载链接
+    const url = window.URL.createObjectURL(response as Blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${domainName}_${format}.${getFileExtension(format)}`
+    link.click()
+    window.URL.revokeObjectURL(url)
+
+    ElMessage.success('证书下载成功')
   } catch (error: any) {
-    console.error('打开下载对话框失败:', error)
-    ElMessage.error('打开下载对话框失败')
+    if (error !== 'cancel') {
+      console.error('证书下载失败:', error)
+      const errorMessage = error?.response?.data?.message || error?.message || '证书下载失败，请重试'
+      ElMessage.error(errorMessage)
+    }
   }
 }
 
