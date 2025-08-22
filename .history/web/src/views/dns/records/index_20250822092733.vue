@@ -44,7 +44,6 @@
           <template v-else>
             <el-button class="modern-btn secondary" @click="handleRefresh" :icon="Refresh">
               刷新
-            </el-button>
             <el-button class="modern-btn primary" @click="handleAddDomain" :icon="Plus">
               添加域名
             </el-button>

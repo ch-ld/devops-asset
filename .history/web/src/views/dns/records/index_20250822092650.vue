@@ -44,7 +44,6 @@
           <template v-else>
             <el-button class="modern-btn secondary" @click="handleRefresh" :icon="Refresh">
               刷新
-            </el-button>
             <el-button class="modern-btn primary" @click="handleAddDomain" :icon="Plus">
               添加域名
             </el-button>
@@ -367,39 +366,37 @@
         </div>
       </div>
 
-      <!-- 记录列表 -->
-      <div v-if="selectedDomain" class="modern-content-card">
-        <div class="card-header">
-          <div class="header-content">
-            <div class="header-left">
-              <h3 class="card-title">解析记录</h3>
-              <p class="card-subtitle">{{ records.length }} 条记录</p>
-            </div>
-            <div class="header-actions">
+    <!-- 记录列表 -->
+    <div v-if="viewMode === 'detail' && selectedDomain" class="records-section">
+      <el-card>
+        <template #header>
+          <div class="records-header">
+            <h3>解析记录</h3>
+            <div class="action-buttons">
               <el-button
                 v-if="selectedRecords.length > 0"
-                class="modern-btn danger"
+                type="danger"
                 @click="handleBatchDelete"
               >
                 批量删除 ({{ selectedRecords.length }})
               </el-button>
               <el-button
                 v-if="selectedRecords.length > 0"
-                class="modern-btn warning"
+                type="warning"
                 @click="handleBatchSync"
               >
                 批量同步 ({{ selectedRecords.length }})
               </el-button>
             </div>
           </div>
-        </div>
-        <div class="card-content">
-          <div class="modern-table">
-            <el-table
-              :data="records"
-              v-loading="loading"
-              @selection-change="handleSelectionChange"
-            >
+        </template>
+
+        <el-table
+          :data="records"
+          v-loading="loading"
+          @selection-change="handleSelectionChange"
+          class="records-table"
+        >
           <el-table-column type="selection" width="55" />
           <el-table-column prop="name" label="记录名称" min-width="150">
             <template #default="{ row }">
@@ -495,22 +492,20 @@
               <el-button size="small" type="danger" @click="handleDeleteRecord(row)">删除</el-button>
             </template>
           </el-table-column>
-            </el-table>
+        </el-table>
 
-            <div class="pagination-container">
-              <el-pagination
-                v-model:current-page="pagination.page"
-                v-model:page-size="pagination.pageSize"
-                :total="pagination.total"
-                :page-sizes="[10, 20, 50, 100]"
-                layout="total, sizes, prev, pager, next, jumper"
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-              />
-            </div>
-          </div>
+        <div class="pagination-container">
+          <el-pagination
+            v-model:current-page="pagination.page"
+            v-model:page-size="pagination.pageSize"
+            :total="pagination.total"
+            :page-sizes="[10, 20, 50, 100]"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+          />
         </div>
-      </div>
+      </el-card>
     </div>
 
     <!-- 空状态 -->

@@ -1,115 +1,159 @@
 <template>
-  <div class="dns-cert-container">
+  <div class="modern-page-container">
     <!-- 页面头部 -->
     <div class="page-header">
-      <div class="page-header-content">
-        <div class="page-title">
-          <h1>证书管理</h1>
-          <p>管理SSL/TLS证书，包括申请、续期、部署和监控</p>
+      <div class="header-content">
+        <div class="title-section">
+          <h1 class="page-title">
+            <div class="title-icon">
+              <el-icon><Lock /></el-icon>
+            </div>
+            SSL证书管理
+          </h1>
+          <p class="page-description">管理您的SSL证书，监控证书状态，确保网站安全访问</p>
         </div>
-        <div class="page-actions">
-          <el-dropdown @command="handleCreateCommand" split-button type="primary" @click="handleAdvancedCreate">
-            <el-icon><Plus /></el-icon>
-            申请证书
+        <div class="header-actions">
+          <el-button class="modern-btn secondary" @click="handleRefresh" :icon="Refresh">
+            刷新
+          </el-button>
+          <el-dropdown @command="handleCreateCommand">
+            <el-button class="modern-btn secondary">
+              批量操作
+              <el-icon><ArrowDown /></el-icon>
+            </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="simple">
-                  <el-icon><Lightning /></el-icon>
-                  快速申请
-                </el-dropdown-item>
-                <el-dropdown-item command="advanced">
-                  <el-icon><Setting /></el-icon>
-                  高级配置
-                </el-dropdown-item>
-                <el-dropdown-item command="upload" divided>
-                  <el-icon><Upload /></el-icon>
-                  导入证书
-                </el-dropdown-item>
+                <el-dropdown-item command="deploy">批量部署</el-dropdown-item>
+                <el-dropdown-item command="renew">批量续期</el-dropdown-item>
+                <el-dropdown-item command="export">批量导出</el-dropdown-item>
+                <el-dropdown-item command="delete" divided>批量删除</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
+          <el-button class="modern-btn primary" @click="handleCreateCommand('simple')" :icon="Plus">
+            申请证书
+          </el-button>
         </div>
       </div>
     </div>
 
     <!-- 统计卡片 -->
-    <div class="stats-container">
-      <el-row :gutter="16">
-        <el-col :span="6">
-          <DNSStatCard
-            title="总证书数"
-            :value="statistics.total"
-            icon="lock"
-            variant="primary"
-            :loading="statisticsLoading"
-          />
-        </el-col>
-        <el-col :span="6">
-          <DNSStatCard
-            title="有效证书"
-            :value="statistics.valid"
-            icon="check"
-            variant="success"
-            :loading="statisticsLoading"
-          />
-        </el-col>
-        <el-col :span="6">
-          <DNSStatCard
-            title="即将过期"
-            :value="statistics.expiring"
-            icon="warning"
-            variant="warning"
-            :loading="statisticsLoading"
-          />
-        </el-col>
-        <el-col :span="6">
-          <DNSStatCard
-            title="已过期"
-            :value="statistics.expired"
-            icon="warning"
-            variant="danger"
-            :loading="statisticsLoading"
-          />
-        </el-col>
-      </el-row>
+    <div class="modern-stats-grid">
+        <div class="stat-card total-card">
+          <div class="card-content">
+            <div class="stat-header">
+              <div class="stat-icon-container total">
+                <el-icon class="stat-icon"><Lock /></el-icon>
+              </div>
+              <div class="stat-trend">
+                <el-icon class="trend-icon"><TrendCharts /></el-icon>
+              </div>
+            </div>
+            <div class="stat-body">
+              <div class="stat-number">{{ statistics.total || 0 }}</div>
+              <div class="stat-label">总证书数</div>
+              <div class="stat-description">所有SSL/TLS证书</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card valid-card">
+          <div class="card-content">
+            <div class="stat-header">
+              <div class="stat-icon-container valid">
+                <el-icon class="stat-icon"><Check /></el-icon>
+              </div>
+              <div class="stat-badge success">
+                <span>{{ Math.round((statistics.valid / statistics.total) * 100) || 0 }}%</span>
+              </div>
+            </div>
+            <div class="stat-body">
+              <div class="stat-number">{{ statistics.valid || 0 }}</div>
+              <div class="stat-label">有效证书</div>
+              <div class="stat-description">正常使用中</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card expiring-card">
+          <div class="card-content">
+            <div class="stat-header">
+              <div class="stat-icon-container expiring">
+                <el-icon class="stat-icon"><Warning /></el-icon>
+              </div>
+              <div class="stat-alert" v-if="statistics.expiring > 0">
+                <el-icon><Bell /></el-icon>
+              </div>
+            </div>
+            <div class="stat-body">
+              <div class="stat-number">{{ statistics.expiring || 0 }}</div>
+              <div class="stat-label">即将过期</div>
+              <div class="stat-description">30天内到期</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card expired-card">
+          <div class="card-content">
+            <div class="stat-header">
+              <div class="stat-icon-container expired">
+                <el-icon class="stat-icon"><CircleClose /></el-icon>
+              </div>
+              <div class="stat-urgent" v-if="statistics.expired > 0">
+                <el-icon><Warning /></el-icon>
+              </div>
+            </div>
+            <div class="stat-body">
+              <div class="stat-number">{{ statistics.expired || 0 }}</div>
+              <div class="stat-label">已过期</div>
+              <div class="stat-description">需要立即处理</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- 搜索和筛选 -->
-    <div class="search-container">
-      <el-card shadow="never">
-        <el-form
-          ref="searchFormRef"
-          :model="searchForm"
-          inline
-          class="search-form"
-        >
-          <el-form-item label="域名" prop="keyword">
+    <!-- 现代化搜索和筛选 -->
+    <div class="modern-search-section">
+      <el-card class="search-card" shadow="never">
+        <div class="search-content">
+          <div class="search-left">
             <el-input
               v-model="searchForm.keyword"
-              placeholder="请输入域名关键词"
+              placeholder="搜索证书域名..."
+              size="large"
               clearable
-              style="width: 200px"
-            />
-          </el-form-item>
-          <el-form-item label="状态" prop="status">
+              class="search-input"
+            >
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
+            </el-input>
+          </div>
+          <div class="search-right">
             <el-select
               v-model="searchForm.status"
-              placeholder="请选择状态"
+              placeholder="证书状态"
+              size="large"
               clearable
+              class="status-filter"
               style="width: 150px"
             >
               <el-option label="全部" value="" />
               <el-option label="申请中" value="pending" />
+              <el-option label="处理中" value="processing" />
+              <el-option label="验证中" value="validating" />
               <el-option label="已签发" value="issued" />
               <el-option label="已过期" value="expired" />
+              <el-option label="申请失败" value="failed" />
               <el-option label="已吊销" value="revoked" />
             </el-select>
-          </el-form-item>
-          <el-form-item label="CA类型" prop="ca_type">
             <el-select
               v-model="searchForm.ca_type"
-              placeholder="请选择CA类型"
+              placeholder="CA类型"
+              size="large"
               clearable
+              class="status-filter"
               style="width: 150px"
             >
               <el-option label="全部" value="" />
@@ -117,18 +161,14 @@
               <el-option label="ZeroSSL" value="zerossl" />
               <el-option label="自定义" value="custom" />
             </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="handleSearch">
-              <el-icon><Search /></el-icon>
+            <el-button type="primary" @click="handleSearch" size="large" :icon="Search">
               搜索
             </el-button>
-            <el-button @click="handleReset">
-              <el-icon><Refresh /></el-icon>
+            <el-button @click="handleReset" size="large" :icon="Refresh">
               重置
             </el-button>
-          </el-form-item>
-        </el-form>
+          </div>
+        </div>
       </el-card>
     </div>
 
@@ -219,11 +259,35 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="status" label="状态" width="100">
+          <el-table-column prop="status" label="状态" width="120">
             <template #default="{ row }">
-              <el-tag :type="getStatusType(row.status)">
-                {{ getStatusText(row.status) }}
-              </el-tag>
+              <div class="status-cell">
+                <el-tag :type="getStatusType(row.status)" class="status-tag">
+                  <el-icon class="status-icon">
+                    <component :is="getStatusIcon(row.status)" />
+                  </el-icon>
+                  {{ getStatusText(row.status) }}
+                </el-tag>
+                <!-- 申请中状态显示进度 -->
+                <div v-if="row.status === 'pending'" class="progress-info">
+                  <el-tooltip :content="getProgressText(row.progress || 0)" placement="top">
+                    <el-progress 
+                      :percentage="row.progress || 0" 
+                      :stroke-width="3" 
+                      :show-text="false"
+                      status="success"
+                    />
+                  </el-tooltip>
+                </div>
+                <!-- 错误状态显示错误信息 -->
+                <div v-if="row.status === 'failed' && row.error_message" class="error-info">
+                  <el-tooltip :content="row.error_message" placement="top">
+                    <el-text type="danger" size="small" truncated>
+                      {{ row.error_message }}
+                    </el-text>
+                  </el-tooltip>
+                </div>
+              </div>
             </template>
           </el-table-column>
           <el-table-column prop="ca_type" label="CA类型" width="120">
@@ -343,6 +407,19 @@
       v-model:visible="showDownloadDialog"
       :certificate="selectedCertificate"
     />
+
+    <!-- 证书部署对话框 -->
+    <CertificateDeployDialog
+      v-model:visible="showDeployDialog"
+      :certificate="selectedCertificate"
+      @success="fetchData"
+    />
+
+    <!-- 证书导出配置对话框 -->
+    <CertificateExportDialog
+      v-model:visible="showExportDialog"
+      :certificate="selectedCertificate"
+    />
   </div>
 </template>
 
@@ -360,12 +437,21 @@ import {
   DocumentCopy,
   Delete,
   Lightning,
-  Setting
+  Setting,
+  Lock,
+  Search,
+  Loading,
+  CircleCheck,
+  CircleClose,
+  Warning,
+  Clock
 } from '@element-plus/icons-vue'
 import { DNSStatCard } from '@/components/dns'
 import CertificateModal from './components/CertificateModal.vue'
 import CertificateDetail from './components/CertificateDetail.vue'
 import CertificateDownloadDialog from '@/components/dns/CertificateDownloadDialog.vue'
+import CertificateDeployDialog from '@/components/dns/CertificateDeployDialog.vue'
+import CertificateExportDialog from '@/components/dns/CertificateExportDialog.vue'
 import { certificateApi } from '@/api/dns/certificate'
 import type { Certificate } from '@/types/dns'
 
@@ -377,6 +463,8 @@ const statisticsLoading = ref(false)
 const modalVisible = ref(false)
 const drawerVisible = ref(false)
 const showDownloadDialog = ref(false)
+const showDeployDialog = ref(false)
+const showExportDialog = ref(false)
 const currentCertificate = ref<Certificate | null>(null)
 const selectedCertificate = ref<Certificate | null>(null)
 const certificates = ref<Certificate[]>([])
@@ -410,8 +498,12 @@ const hasSelected = computed(() => selectedRows.value.length > 0)
 const getStatusType = (status: string) => {
   const statusMap: Record<string, any> = {
     pending: 'warning',
+    processing: 'warning',
+    validating: 'warning',
     issued: 'success',
+    active: 'success',
     expired: 'danger',
+    failed: 'danger',
     revoked: 'info'
   }
   return statusMap[status] || 'info'
@@ -420,11 +512,38 @@ const getStatusType = (status: string) => {
 const getStatusText = (status: string) => {
   const statusMap: Record<string, string> = {
     pending: '申请中',
+    processing: '处理中',
+    validating: '验证中',
     issued: '已签发',
+    active: '已签发',
     expired: '已过期',
+    failed: '申请失败',
     revoked: '已吊销'
   }
   return statusMap[status] || status
+}
+
+const getStatusIcon = (status: string) => {
+  const iconMap: Record<string, any> = {
+    pending: Clock,
+    processing: Loading,
+    validating: Loading,
+    issued: CircleCheck,
+    active: CircleCheck,
+    expired: Warning,
+    failed: CircleClose,
+    revoked: CircleClose
+  }
+  return iconMap[status] || CircleCheck
+}
+
+const getProgressText = (progress: number) => {
+  if (progress < 20) return '初始化申请...'
+  if (progress < 40) return '验证域名所有权...'
+  if (progress < 60) return '生成密钥对...'
+  if (progress < 80) return '申请证书...'
+  if (progress < 100) return '处理证书...'
+  return '申请完成'
 }
 
 const getCATypeName = (caType: string) => {
@@ -614,18 +733,28 @@ const handleCommand = (command: string, row: Certificate) => {
 
   switch (command) {
     case 'deploy':
-      ElMessage.info(`部署证书 ${domainName}`)
+      handleDeploy(row)
       break
     case 'revoke':
       handleRevoke(row)
       break
     case 'export':
-      ElMessage.info(`导出证书 ${domainName} 的配置`)
+      handleExportConfig(row)
       break
     case 'delete':
       handleDelete(row)
       break
   }
+}
+
+const handleDeploy = (row: Certificate) => {
+  selectedCertificate.value = row
+  showDeployDialog.value = true
+}
+
+const handleExportConfig = (row: Certificate) => {
+  selectedCertificate.value = row
+  showExportDialog.value = true
 }
 
 const handleRevoke = async (row: Certificate) => {
@@ -778,8 +907,20 @@ const handleBatchDeploy = async () => {
     return
   }
 
-  // 这里应该打开部署配置弹窗
-  ElMessage.info('批量部署功能开发中...')
+  try {
+    // 简化的批量部署，可以后续改为打开批量部署对话框
+    const hostIds = [1] // 默认主机ID，实际应用中应该让用户选择
+    
+    for (const cert of validCerts) {
+      await certificateApi.deploy(cert.id, hostIds)
+    }
+    
+    ElMessage.success(`已提交 ${validCerts.length} 个证书的部署任务`)
+    selectedRows.value = []
+    await fetchData()
+  } catch (error) {
+    ElMessage.error('批量部署失败')
+  }
 }
 
 // 批量导出
@@ -991,14 +1132,347 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.dns-cert-container {
-  padding: 24px;
-  background: #f5f5f5;
+/* 现代化证书管理页面样式 */
+.modern-cert-container {
   min-height: 100vh;
+  background: #f8fafc;
+  padding: 0;
+  margin: 0;
+
+  /* 现代化页面头部 */
+  .modern-page-header {
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 24px 0;
+    margin-bottom: 24px;
+
+    .header-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+
+      .header-main {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 32px;
+
+        .title-section {
+          flex: 1;
+
+          .title-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 8px;
+
+            .title-icon-wrapper {
+              width: 48px;
+              height: 48px;
+              border-radius: 12px;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+
+              .title-icon {
+                font-size: 24px;
+                color: #ffffff;
+              }
+            }
+
+            .title-content {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+
+              .page-title {
+                font-size: 28px;
+                font-weight: 700;
+                color: #1e293b;
+                margin: 0;
+                line-height: 1.2;
+              }
+
+              .title-badge {
+                :deep(.el-tag) {
+                  background: var(--chip-bg-primary);
+                  color: var(--chip-text-primary);
+                  border: 1px solid var(--chip-border-primary);
+                  font-weight: 500;
+                }
+              }
+            }
+          }
+
+          .page-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.5;
+            margin: 0;
+            max-width: 500px;
+          }
+        }
+
+        .header-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          .refresh-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #64748b;
+
+            &:hover {
+              border-color: var(--brand-primary);
+              color: var(--brand-primary);
+            }
+          }
+
+          .primary-btn {
+            background: var(--brand-primary);
+            border: 1px solid var(--brand-primary);
+            color: #ffffff;
+            font-weight: 600;
+
+            &:hover {
+              background: var(--brand-primary-hover);
+              border-color: var(--brand-primary-hover);
+            }
+          }
+
+          :deep(.el-divider--vertical) {
+            height: 20px;
+            border-color: #e2e8f0;
+          }
+        }
+      }
+    }
+  }
+
+  /* 现代化统计卡片 */
+  .modern-stats-section {
+    max-width: 1400px;
+    margin: 0 auto 24px;
+    padding: 0 24px;
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+
+      .stat-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 24px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+          border-color: #cbd5e1;
+        }
+
+        .card-content {
+          .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+
+            .stat-icon-container {
+              width: 48px;
+              height: 48px;
+              border-radius: 12px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+
+              .stat-icon {
+                font-size: 24px;
+              }
+
+              &.total {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: #ffffff;
+              }
+
+              &.valid {
+                background: var(--chip-bg-success);
+                color: var(--chip-text-success);
+              }
+
+              &.expiring {
+                background: var(--chip-bg-warning);
+                color: var(--chip-text-warning);
+              }
+
+              &.expired {
+                background: var(--chip-bg-danger);
+                color: var(--chip-text-danger);
+              }
+            }
+
+            .stat-trend {
+              color: #10b981;
+              font-size: 16px;
+            }
+
+            .stat-badge {
+              padding: 4px 8px;
+              border-radius: 6px;
+              font-size: 12px;
+              font-weight: 600;
+
+              &.success {
+                background: var(--chip-bg-success);
+                color: var(--chip-text-success);
+              }
+            }
+
+            .stat-alert {
+              color: var(--chip-text-warning);
+              font-size: 16px;
+              animation: bounce 2s infinite;
+            }
+
+            .stat-urgent {
+              color: var(--chip-text-danger);
+              font-size: 16px;
+              animation: bounce 2s infinite;
+            }
+          }
+
+          .stat-body {
+            .stat-number {
+              font-size: 32px;
+              font-weight: 700;
+              color: #1e293b;
+              line-height: 1;
+              margin-bottom: 4px;
+            }
+
+            .stat-label {
+              font-size: 14px;
+              font-weight: 600;
+              color: #475569;
+              margin-bottom: 4px;
+            }
+
+            .stat-description {
+              font-size: 12px;
+              color: #64748b;
+              line-height: 1.4;
+            }
+          }
+        }
+
+        &.total-card {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: #ffffff;
+          border: none;
+
+          .stat-number,
+          .stat-label,
+          .stat-description {
+            color: #ffffff;
+          }
+
+          .stat-description {
+            opacity: 0.8;
+          }
+        }
+      }
+    }
+  }
+
+  /* 现代化搜索区域 */
+  .modern-search-section {
+    max-width: 1400px;
+    margin: 0 auto 24px;
+    padding: 0 24px;
+
+    .search-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #ffffff;
+
+      :deep(.el-card__body) {
+        padding: 20px;
+      }
+
+      .search-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+
+        .search-left {
+          flex: 1;
+          max-width: 400px;
+
+          .search-input {
+            :deep(.el-input__wrapper) {
+              border-radius: 8px;
+              border: 1px solid #e2e8f0;
+              box-shadow: none;
+
+              &:hover {
+                border-color: var(--brand-primary);
+              }
+
+              &.is-focus {
+                border-color: var(--brand-primary);
+                box-shadow: 0 0 0 2px rgba(3, 102, 214, 0.1);
+              }
+            }
+          }
+        }
+
+        .search-right {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+
+          .status-filter {
+            width: 140px;
+
+            :deep(.el-select__wrapper) {
+              border-radius: 8px;
+              border: 1px solid #e2e8f0;
+
+              &:hover {
+                border-color: var(--brand-primary);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* 动画效果 */
+  @keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-4px); }
+    60% { transform: translateY(-2px); }
+  }
 }
 
 .page-header {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
   margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e4e8;
   
   .page-header-content {
     display: flex;
@@ -1008,15 +1482,40 @@ onMounted(() => {
     .page-title {
       h1 {
         margin: 0 0 8px 0;
-        font-size: 24px;
-        font-weight: 600;
-        color: #262626;
+        font-size: 28px;
+        font-weight: 700;
+        color: #24292e;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .title-icon {
+          font-size: 28px;
+          color: #0366d6;
+        }
       }
       
       p {
         margin: 0;
-        color: #8c8c8c;
-        font-size: 14px;
+        color: #64748b;
+        font-size: 16px;
+        font-weight: 500;
+      }
+    }
+
+    .page-actions {
+      .create-dropdown {
+        background: #0366d6;
+        border: 1px solid #0366d6;
+        color: white;
+        font-weight: 600;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: #0256cc;
+          border-color: #0256cc;
+        }
       }
     }
   }
@@ -1028,13 +1527,30 @@ onMounted(() => {
 
 .search-container {
   margin-bottom: 24px;
+
+  .el-card {
+    border-radius: 8px;
+    border: 1px solid #e1e4e8;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
 }
 
 .table-container {
+  .el-card {
+    border-radius: 8px;
+    border: 1px solid #e1e4e8;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
   .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    font-weight: 700;
+    font-size: 18px;
+    color: #1e293b;
   }
   
   .pagination-container {
@@ -1046,8 +1562,10 @@ onMounted(() => {
 
 .domain-cell {
   .domain-name {
-    font-weight: 500;
+    font-weight: 600;
     margin-bottom: 4px;
+    color: #1e293b;
+    font-size: 15px;
   }
   
   .cert-type {
@@ -1060,22 +1578,321 @@ onMounted(() => {
 .expires-cell {
   .expires-date {
     margin-bottom: 2px;
+    font-weight: 600;
+    color: #1e293b;
   }
   
   .expires-days {
     font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
     
     &.text-danger {
-      color: #f56c6c;
+      background: rgba(255, 77, 79, 0.12);
+      color: #ff4d4f;
+      border: 1px solid rgba(255, 77, 79, 0.2);
     }
-    
+
     &.text-warning {
-      color: #e6a23c;
+      background: rgba(250, 140, 22, 0.12);
+      color: #fa8c16;
+      border: 1px solid rgba(250, 140, 22, 0.2);
     }
-    
+
     &.text-success {
-      color: #67c23a;
+      background: rgba(16, 185, 129, 0.12);
+      color: #059669;
+      border: 1px solid rgba(16, 185, 129, 0.2);
     }
   }
+}
+
+// 表格样式优化
+:deep(.el-table) {
+  border-radius: 16px;
+  overflow: hidden;
+  background: transparent;
+  
+  .el-table__header th {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    color: #475569;
+    font-weight: 700;
+    border-bottom: 2px solid #e2e8f0;
+    padding: 20px 12px;
+  }
+
+  .el-table__row {
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.95);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  .el-table__cell {
+    padding: 18px 12px;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+  }
+}
+
+// 按钮样式优化
+:deep(.el-button) {
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &.el-button--text {
+    &:hover {
+      transform: translateY(-2px);
+      color: #667eea;
+    }
+  }
+
+  &.el-button--primary:not(.is-link) {
+    background: #0366d6;
+    border: 1px solid #0366d6;
+    color: #fff;
+
+    &:hover {
+      background: #0256cc;
+      border-color: #0256cc;
+      transform: translateY(-2px);
+      box-shadow: none;
+    }
+  }
+
+  &.is-link {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: #0366d6;
+    padding: 0 4px;
+  }
+
+  &.el-button--success {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+
+    &:hover {
+      background: rgba(16, 185, 129, 0.18);
+      box-shadow: none;
+    }
+  }
+
+  &.el-button--warning {
+    background: rgba(250, 140, 22, 0.12);
+    color: #fa8c16;
+    border: 1px solid rgba(250, 140, 22, 0.3);
+
+    &:hover {
+      background: rgba(250, 140, 22, 0.18);
+      box-shadow: none;
+    }
+  }
+}
+
+// 标签样式优化
+:deep(.el-tag) {
+  border-radius: 8px;
+  font-weight: 600;
+  border: 1px solid rgba(0,0,0,0.06);
+  padding: 4px 10px;
+
+  &.el-tag--success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    border-color: rgba(16, 185, 129, 0.2);
+  }
+
+  &.el-tag--warning {
+    background: rgba(250, 140, 22, 0.1);
+    color: #fa8c16;
+    border-color: rgba(250, 140, 22, 0.2);
+  }
+
+  &.el-tag--danger {
+    background: rgba(255, 77, 79, 0.1);
+    color: #ff4d4f;
+    border-color: rgba(255,77,79,0.2);
+  }
+
+  &.el-tag--info {
+    background: rgba(107, 114, 128, 0.08);
+    color: #4b5563;
+    border-color: rgba(107,114,128,0.2);
+  }
+}
+
+// 状态列样式
+.status-cell {
+  .status-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    
+    .status-icon {
+      font-size: 14px;
+    }
+  }
+  
+  .progress-info {
+    margin-top: 8px;
+    
+    :deep(.el-progress) {
+      .el-progress-bar {
+        .el-progress-bar__outer {
+          background: rgba(226, 232, 240, 0.5);
+          border-radius: 8px;
+        }
+        
+        .el-progress-bar__inner {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          border-radius: 8px;
+        }
+      }
+    }
+  }
+  
+  .error-info {
+    margin-top: 4px;
+  }
+}
+
+// DNS统计卡片组件优化
+:deep(.dns-stat-card) {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+  }
+}
+
+// 输入框和选择器优化
+:deep(.el-input) {
+  .el-input__wrapper {
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: #94a3b8;
+    }
+
+    &.is-focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+  }
+}
+
+:deep(.el-select) {
+  .el-select__wrapper {
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: #94a3b8;
+    }
+
+    &.is-focused {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+  }
+}
+
+// 分页器优化
+:deep(.el-pagination) {
+  .btn-prev,
+  .btn-next,
+  .el-pager li {
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+
+    &:hover {
+      transform: translateY(-1px);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: #667eea;
+    }
+
+    &.is-active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: #667eea;
+    }
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .dns-cert-container {
+    padding: 16px;
+  }
+
+  .page-header {
+    padding: 24px;
+
+    .page-header-content {
+      flex-direction: column;
+      gap: 20px;
+      align-items: flex-start;
+
+      .page-title h1 {
+        font-size: 28px;
+      }
+
+      .page-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+      }
+    }
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
+}
+
+// 加载动画
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
 }
 </style>

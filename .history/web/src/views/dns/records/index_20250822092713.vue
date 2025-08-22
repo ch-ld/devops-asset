@@ -44,7 +44,6 @@
           <template v-else>
             <el-button class="modern-btn secondary" @click="handleRefresh" :icon="Refresh">
               刷新
-            </el-button>
             <el-button class="modern-btn primary" @click="handleAddDomain" :icon="Plus">
               添加域名
             </el-button>
@@ -495,22 +494,20 @@
               <el-button size="small" type="danger" @click="handleDeleteRecord(row)">删除</el-button>
             </template>
           </el-table-column>
-            </el-table>
+        </el-table>
 
-            <div class="pagination-container">
-              <el-pagination
-                v-model:current-page="pagination.page"
-                v-model:page-size="pagination.pageSize"
-                :total="pagination.total"
-                :page-sizes="[10, 20, 50, 100]"
-                layout="total, sizes, prev, pager, next, jumper"
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-              />
-            </div>
-          </div>
+        <div class="pagination-container">
+          <el-pagination
+            v-model:current-page="pagination.page"
+            v-model:page-size="pagination.pageSize"
+            :total="pagination.total"
+            :page-sizes="[10, 20, 50, 100]"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+          />
         </div>
-      </div>
+      </el-card>
     </div>
 
     <!-- 空状态 -->

@@ -198,7 +198,8 @@ html.dark {
   --chip-border-primary: rgba(3,102,214,0.2);
 }
 
-
+/* 引入统一设计系统 */
+@import './design-system.scss';
 
 // 媒体查询-设备尺寸
 // notebook

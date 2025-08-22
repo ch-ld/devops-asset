@@ -1,170 +1,113 @@
 <template>
-  <div class="modern-page-container">
-    <!-- 页面头部 -->
-    <div class="page-header">
-      <div class="header-content">
-        <div class="title-section">
-          <h1 class="page-title">
-            <div class="title-icon">
-              <el-icon><Monitor /></el-icon>
+  <div class="dns-records-page">
+    <!-- 现代化页面头部 -->
+    <div class="modern-page-header">
+      <div class="header-container">
+        <div class="header-main">
+          <div class="title-section">
+            <div class="title-group">
+              <h1 class="page-title">{{ viewMode === 'list' ? '域名解析' : 'DNS 解析记录' }}</h1>
+              <div class="title-badge">
+                <el-tag type="info" size="small">{{ viewMode === 'list' ? '权威解析' : '记录管理' }}</el-tag>
+              </div>
             </div>
-            {{ viewMode === 'list' ? 'DNS提供商' : 'DNS解析记录' }}
-          </h1>
-          <p class="page-description">{{ viewMode === 'list' ? '管理您的域名DNS解析记录，支持多种记录类型和智能解析' : '智能管理您的域名解析记录，支持多云平台同步' }}</p>
-        </div>
-        <div class="header-actions">
-          <el-radio-group v-model="viewMode" @change="handleViewModeChange" class="modern-btn-group">
-            <el-radio-button label="list">
-              <el-icon><List /></el-icon>
-              域名列表
-            </el-radio-button>
-            <el-radio-button label="detail">
-              <el-icon><Document /></el-icon>
-              记录详情
-            </el-radio-button>
-          </el-radio-group>
+            <p class="page-subtitle">{{ viewMode === 'list' ? '管理您的域名DNS解析记录，支持多种记录类型和智能解析' : '智能管理您的域名解析记录，支持多云平台同步' }}</p>
+          </div>
 
-          <template v-if="viewMode === 'detail'">
-            <el-button class="modern-btn secondary" @click="handleRefresh" :icon="Refresh">
-              刷新
-            </el-button>
-            <el-button class="modern-btn secondary" :disabled="!selectedDomain" @click="handleExportAll" :icon="Download">
-              导出
-            </el-button>
-            <el-button class="modern-btn secondary" :disabled="!selectedDomain" @click="openImportModal" :icon="Upload">
-              导入
-            </el-button>
-            <el-button class="modern-btn primary" :disabled="!selectedDomain" @click="() => bulkVisible = true">
-              批量添加
-            </el-button>
-            <el-button class="modern-btn primary" @click="handleAddRecord" :disabled="!selectedDomain" :icon="Plus">
-              添加记录
-            </el-button>
-          </template>
-          <template v-else>
-            <el-button class="modern-btn secondary" @click="handleRefresh" :icon="Refresh">
-              刷新
-            </el-button>
-            <el-button class="modern-btn primary" @click="handleAddDomain" :icon="Plus">
-              添加域名
-            </el-button>
-          </template>
+          <div class="header-controls">
+            <div class="view-switcher">
+              <el-segmented v-model="viewMode" @change="handleViewModeChange" :options="[
+                { label: '域名列表', value: 'list', icon: 'List' },
+                { label: '记录详情', value: 'detail', icon: 'Document' }
+              ]" />
+            </div>
+
+            <div class="action-group">
+              <template v-if="viewMode === 'detail'">
+                <el-button @click="handleRefresh" :icon="Refresh" circle class="refresh-btn" />
+                <el-divider direction="vertical" />
+                <el-button :disabled="!selectedDomain" @click="handleExportAll" :icon="Download" class="secondary-btn">
+                  导出
+                </el-button>
+                <el-button :disabled="!selectedDomain" @click="openImportModal" :icon="Upload" class="secondary-btn">
+                  导入
+                </el-button>
+                <el-button type="primary" :disabled="!selectedDomain" @click="() => bulkVisible = true" class="primary-btn">
+                  批量添加
+                </el-button>
+                <el-button type="primary" @click="handleAddRecord" :disabled="!selectedDomain" :icon="Plus" class="primary-btn">
+                  添加记录
+                </el-button>
+              </template>
+              <template v-else>
+                <el-button @click="handleRefresh" :icon="Refresh" circle class="refresh-btn" />
+                <el-divider direction="vertical" />
+                <el-button type="primary" @click="handleAddDomain" :icon="Plus" class="primary-btn">
+                  添加域名
+                </el-button>
+              </template>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 域名列表视图 -->
-    <div v-if="viewMode === 'list'">
-      <!-- 统计卡片 -->
-      <div class="modern-stats-grid">
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-icon primary">
-              <el-icon><Monitor /></el-icon>
-            </div>
-            <div class="stat-trend up">+8%</div>
-          </div>
-          <div class="stat-content">
-            <div class="stat-number">{{ domains.length || 0 }}</div>
-            <div class="stat-label">总域名数</div>
-            <div class="stat-description">所有托管域名</div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-icon success">
-              <el-icon><Check /></el-icon>
-            </div>
-            <div class="stat-trend up">+3</div>
-          </div>
-          <div class="stat-content">
-            <div class="stat-number">{{ domains.filter(d => d.status === 'normal').length || 0 }}</div>
-            <div class="stat-label">正常解析</div>
-            <div class="stat-description">解析状态正常</div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-icon warning">
-              <el-icon><Clock /></el-icon>
-            </div>
-            <div class="stat-trend down">-1</div>
-          </div>
-          <div class="stat-content">
-            <div class="stat-number">{{ domains.filter(d => d.status === 'paused').length || 0 }}</div>
-            <div class="stat-label">暂停解析</div>
-            <div class="stat-description">暂时停用</div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-icon error">
-              <el-icon><Warning /></el-icon>
-            </div>
-            <div class="stat-trend down">0</div>
-          </div>
-          <div class="stat-content">
-            <div class="stat-number">{{ domains.filter(d => d.status === 'error').length || 0 }}</div>
-            <div class="stat-label">解析异常</div>
-            <div class="stat-description">需要处理</div>
-          </div>
-        </div>
-      </div>
-
+    <!-- 现代化域名列表视图 -->
+    <div v-if="viewMode === 'list'" class="modern-domain-view">
       <!-- 搜索和筛选区域 -->
-      <div class="modern-search-section">
-        <div class="search-content">
-          <el-input
-            v-model="filters.keyword"
-            placeholder="搜索域名..."
-            size="large"
-            clearable
-            @keyup.enter="handleSearch"
-            class="search-input"
-          >
-            <template #prefix>
-              <el-icon><Search /></el-icon>
-            </template>
-          </el-input>
-          <div class="search-filters">
-            <el-select v-model="filters.status" placeholder="解析状态" clearable size="large" style="width: 150px">
-              <el-option label="全部状态" value="" />
-              <el-option label="正常" value="normal" />
-              <el-option label="暂停" value="paused" />
-              <el-option label="异常" value="error" />
-            </el-select>
-            <el-button class="modern-btn primary" @click="handleSearch" :icon="Search">
-              搜索
-            </el-button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 域名表格 -->
-      <div class="modern-content-card">
-        <div class="card-header">
-          <div class="header-content">
-            <div class="header-left">
-              <h3 class="card-title">域名列表</h3>
-              <p class="card-subtitle">{{ domains.length }} 个域名</p>
+      <div class="search-filter-card">
+        <el-card class="filter-card" shadow="never">
+          <div class="filter-content">
+            <div class="filter-left">
+              <el-input
+                v-model="filters.keyword"
+                placeholder="搜索域名..."
+                size="large"
+                clearable
+                @keyup.enter="handleSearch"
+                class="search-input"
+              >
+                <template #prefix>
+                  <el-icon><Search /></el-icon>
+                </template>
+              </el-input>
             </div>
-            <div class="header-actions">
-              <el-button class="modern-btn secondary" @click="handleRefresh" :icon="Refresh">
-                刷新
+            <div class="filter-right">
+              <el-select v-model="filters.status" placeholder="解析状态" clearable size="large" class="status-filter">
+                <el-option label="全部状态" value="" />
+                <el-option label="正常" value="normal" />
+                <el-option label="暂停" value="paused" />
+                <el-option label="异常" value="error" />
+              </el-select>
+              <el-button type="primary" @click="handleSearch" size="large" :icon="Search">
+                搜索
               </el-button>
             </div>
           </div>
-        </div>
-        <div class="card-content">
-          <div class="modern-table">
-            <el-table
-              :data="domains"
-              :loading="loading"
-              @selection-change="handleDomainSelectionChange"
-            >
+        </el-card>
+      </div>
+
+      <!-- 现代化域名表格 -->
+      <div class="modern-table-container">
+        <el-card class="table-card" shadow="never">
+          <template #header>
+            <div class="table-header">
+              <div class="header-left">
+                <h3 class="table-title">域名列表</h3>
+                <el-tag type="info" size="small">{{ domains.length }} 个域名</el-tag>
+              </div>
+              <div class="header-right">
+                <el-button @click="handleRefresh" :icon="Refresh" circle size="small" />
+              </div>
+            </div>
+          </template>
+
+          <el-table
+            :data="domains"
+            :loading="loading"
+            class="modern-table"
+            @selection-change="handleDomainSelectionChange"
+          >
             <el-table-column type="selection" width="55" />
             <el-table-column prop="name" label="域名" min-width="200">
             <template #default="{ row }">
@@ -247,35 +190,34 @@
               </div>
             </template>
           </el-table-column>
-            </el-table>
-          </div>
-        </div>
+        </el-table>
       </div>
     </div>
 
-    <!-- 记录详情视图 -->
-    <div v-else>
-      <!-- 域名选择 -->
-      <div class="modern-content-card">
-        <div class="card-header">
-          <div class="header-content">
-            <div class="header-left">
-              <h3 class="card-title">选择域名</h3>
-              <p class="card-subtitle">选择要管理DNS解析记录的域名</p>
+    <!-- 域名选择 (记录详情视图) -->
+    <div v-else class="domain-selection-section">
+      <el-card class="domain-selection-card" shadow="never">
+        <div class="domain-selector-content">
+          <div class="selector-left">
+            <div class="selector-icon-wrapper">
+              <el-icon class="selector-icon" size="20"><Monitor /></el-icon>
+            </div>
+            <div class="selector-info">
+              <h3 class="selector-title">选择域名</h3>
+              <p class="selector-desc">选择要管理DNS解析记录的域名</p>
             </div>
           </div>
-        </div>
-        <div class="card-content">
-          <div class="domain-selector">
-            <el-select
-              v-model="selectedDomain"
-              placeholder="请选择要管理的域名"
-              size="large"
-              filterable
-              clearable
-              @change="handleDomainChange"
-              style="width: 300px; margin-right: 16px;"
-            >
+          <div class="selector-right">
+            <div class="selector-controls">
+              <el-select
+                v-model="selectedDomain"
+                placeholder="请选择要管理的域名"
+                size="large"
+                filterable
+                clearable
+                @change="handleDomainChange"
+                class="domain-select"
+              >
                 <el-option
                   v-for="domain in domains"
                   :key="domain.id"
@@ -297,109 +239,125 @@
               </el-select>
               <el-button
                 v-if="selectedDomain"
-                class="modern-btn primary"
+                type="primary"
                 @click="handleSyncRecords"
                 :loading="syncLoading"
                 :icon="Refresh"
               >
                 同步记录
               </el-button>
+            </div>
+          </div>
+        </div>
+      </el-card>
+    </div>
+
+    <!-- 现代化统计卡片 -->
+    <div v-if="viewMode === 'detail' && selectedDomain" class="modern-stats-section">
+      <div class="stats-grid">
+        <div class="stat-card total-card">
+          <div class="card-content">
+            <div class="stat-header">
+              <div class="stat-icon-container total">
+                <el-icon class="stat-icon"><Document /></el-icon>
+              </div>
+              <div class="stat-trend">
+                <el-icon class="trend-icon"><TrendCharts /></el-icon>
+              </div>
+            </div>
+            <div class="stat-body">
+              <div class="stat-number">{{ domainStats.total || 0 }}</div>
+              <div class="stat-label">总记录数</div>
+              <div class="stat-description">所有DNS解析记录</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card active-card">
+          <div class="card-content">
+            <div class="stat-header">
+              <div class="stat-icon-container active">
+                <el-icon class="stat-icon"><Check /></el-icon>
+              </div>
+              <div class="stat-badge success">
+                <span>{{ Math.round((domainStats.active / domainStats.total) * 100) || 0 }}%</span>
+              </div>
+            </div>
+            <div class="stat-body">
+              <div class="stat-number">{{ domainStats.active || 0 }}</div>
+              <div class="stat-label">正常记录</div>
+              <div class="stat-description">解析状态正常</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card syncing-card">
+          <div class="card-content">
+            <div class="stat-header">
+              <div class="stat-icon-container syncing">
+                <el-icon class="stat-icon rotating"><Loading /></el-icon>
+              </div>
+              <div class="stat-pulse" v-if="domainStats.syncing > 0"></div>
+            </div>
+            <div class="stat-body">
+              <div class="stat-number">{{ domainStats.syncing || 0 }}</div>
+              <div class="stat-label">同步中</div>
+              <div class="stat-description">正在同步更新</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card error-card">
+          <div class="card-content">
+            <div class="stat-header">
+              <div class="stat-icon-container error">
+                <el-icon class="stat-icon"><Warning /></el-icon>
+              </div>
+              <div class="stat-alert" v-if="domainStats.error > 0">
+                <el-icon><Bell /></el-icon>
+              </div>
+            </div>
+            <div class="stat-body">
+              <div class="stat-number">{{ domainStats.error || 0 }}</div>
+              <div class="stat-label">异常记录</div>
+              <div class="stat-description">需要处理的问题</div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- 记录统计卡片 -->
-      <div v-if="selectedDomain" class="modern-stats-grid">
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-icon primary">
-              <el-icon><Document /></el-icon>
-            </div>
-            <div class="stat-trend up">+15</div>
-          </div>
-          <div class="stat-content">
-            <div class="stat-number">{{ domainStats.total || 0 }}</div>
-            <div class="stat-label">总记录数</div>
-            <div class="stat-description">所有DNS解析记录</div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-icon success">
-              <el-icon><Check /></el-icon>
-            </div>
-            <div class="stat-trend up">+8</div>
-          </div>
-          <div class="stat-content">
-            <div class="stat-number">{{ domainStats.active || 0 }}</div>
-            <div class="stat-label">正常记录</div>
-            <div class="stat-description">解析状态正常</div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-icon warning">
-              <el-icon><Loading /></el-icon>
-            </div>
-            <div class="stat-trend down">-3</div>
-          </div>
-          <div class="stat-content">
-            <div class="stat-number">{{ domainStats.syncing || 0 }}</div>
-            <div class="stat-label">同步中</div>
-            <div class="stat-description">正在同步更新</div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-icon error">
-              <el-icon><Warning /></el-icon>
-            </div>
-            <div class="stat-trend down">-1</div>
-          </div>
-          <div class="stat-content">
-            <div class="stat-number">{{ domainStats.error || 0 }}</div>
-            <div class="stat-label">异常记录</div>
-            <div class="stat-description">需要处理的问题</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 记录列表 -->
-      <div v-if="selectedDomain" class="modern-content-card">
-        <div class="card-header">
-          <div class="header-content">
-            <div class="header-left">
-              <h3 class="card-title">解析记录</h3>
-              <p class="card-subtitle">{{ records.length }} 条记录</p>
-            </div>
-            <div class="header-actions">
+    <!-- 记录列表 -->
+    <div v-if="viewMode === 'detail' && selectedDomain" class="records-section">
+      <el-card>
+        <template #header>
+          <div class="records-header">
+            <h3>解析记录</h3>
+            <div class="action-buttons">
               <el-button
                 v-if="selectedRecords.length > 0"
-                class="modern-btn danger"
+                type="danger"
                 @click="handleBatchDelete"
               >
                 批量删除 ({{ selectedRecords.length }})
               </el-button>
               <el-button
                 v-if="selectedRecords.length > 0"
-                class="modern-btn warning"
+                type="warning"
                 @click="handleBatchSync"
               >
                 批量同步 ({{ selectedRecords.length }})
               </el-button>
             </div>
           </div>
-        </div>
-        <div class="card-content">
-          <div class="modern-table">
-            <el-table
-              :data="records"
-              v-loading="loading"
-              @selection-change="handleSelectionChange"
-            >
+        </template>
+
+        <el-table
+          :data="records"
+          v-loading="loading"
+          @selection-change="handleSelectionChange"
+          class="records-table"
+        >
           <el-table-column type="selection" width="55" />
           <el-table-column prop="name" label="记录名称" min-width="150">
             <template #default="{ row }">
@@ -495,22 +453,20 @@
               <el-button size="small" type="danger" @click="handleDeleteRecord(row)">删除</el-button>
             </template>
           </el-table-column>
-            </el-table>
+        </el-table>
 
-            <div class="pagination-container">
-              <el-pagination
-                v-model:current-page="pagination.page"
-                v-model:page-size="pagination.pageSize"
-                :total="pagination.total"
-                :page-sizes="[10, 20, 50, 100]"
-                layout="total, sizes, prev, pager, next, jumper"
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-              />
-            </div>
-          </div>
+        <div class="pagination-container">
+          <el-pagination
+            v-model:current-page="pagination.page"
+            v-model:page-size="pagination.pageSize"
+            :total="pagination.total"
+            :page-sizes="[10, 20, 50, 100]"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+          />
         </div>
-      </div>
+      </el-card>
     </div>
 
     <!-- 空状态 -->
@@ -1198,404 +1154,147 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-/* 现代化页面样式 */
 .dns-records-page {
   min-height: 100vh;
-  background: #f8fafc;
-  padding: 0;
-  margin: 0;
+  background: #f6f8fa;
+  padding: 24px;
+}
 
-  /* 现代化页面头部 */
-  .modern-page-header {
-    background: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
-    padding: 24px 0;
-    margin-bottom: 24px;
+.page-header {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e4e8;
 
-    .header-container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 0 24px;
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
 
-      .header-main {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 32px;
+    .header-left {
+      .page-title-wrapper {
+        margin-bottom: 8px;
 
-        .title-section {
-          flex: 1;
+        .page-title {
+          margin: 0 0 4px 0;
+          font-size: 28px;
+          font-weight: 700;
+          color: #24292e;
+          line-height: 1.2;
+        }
 
-          .title-group {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 8px;
-
-            .page-title {
-              font-size: 28px;
-              font-weight: 700;
-              color: #1e293b;
-              margin: 0;
-              line-height: 1.2;
-            }
-
-            .title-badge {
-              :deep(.el-tag) {
-                background: var(--chip-bg-primary);
-                color: var(--chip-text-primary);
-                border: 1px solid var(--chip-border-primary);
-                font-weight: 500;
-              }
-            }
-          }
-
-          .page-subtitle {
+        .page-breadcrumb {
+          :deep(.el-breadcrumb) {
             font-size: 14px;
-            color: #64748b;
-            line-height: 1.5;
-            margin: 0;
-            max-width: 500px;
-          }
-        }
 
-        .header-controls {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-
-          .view-switcher {
-            :deep(.el-segmented) {
-              background: #f1f5f9;
-              border-radius: 8px;
-              padding: 2px;
-            }
-          }
-
-          .action-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-
-            .refresh-btn {
-              width: 36px;
-              height: 36px;
-              border: 1px solid #e2e8f0;
-              background: #ffffff;
-              color: #64748b;
-
-              &:hover {
-                border-color: var(--brand-primary);
-                color: var(--brand-primary);
-              }
-            }
-
-            .secondary-btn {
-              background: #ffffff;
-              border: 1px solid #e2e8f0;
-              color: #475569;
-              font-weight: 500;
-
-              &:hover {
-                border-color: var(--brand-primary);
-                color: var(--brand-primary);
-              }
-            }
-
-            .primary-btn {
-              background: var(--brand-primary);
-              border: 1px solid var(--brand-primary);
-              color: #ffffff;
-              font-weight: 600;
-
-              &:hover {
-                background: var(--brand-primary-hover);
-                border-color: var(--brand-primary-hover);
-              }
-            }
-
-            :deep(.el-divider--vertical) {
-              height: 20px;
-              border-color: #e2e8f0;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  /* 现代化域名视图 */
-  .modern-domain-view {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 24px;
-
-    .search-filter-card {
-      margin-bottom: 24px;
-
-      .filter-card {
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        background: #ffffff;
-
-        :deep(.el-card__body) {
-          padding: 20px;
-        }
-
-        .filter-content {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 16px;
-
-          .filter-left {
-            flex: 1;
-            max-width: 400px;
-
-            .search-input {
-              :deep(.el-input__wrapper) {
-                border-radius: 8px;
-                border: 1px solid #e2e8f0;
-                box-shadow: none;
+            .el-breadcrumb__item {
+              .el-breadcrumb__inner {
+                color: #64748b;
+                font-weight: 500;
+                transition: all 0.3s ease;
 
                 &:hover {
-                  border-color: var(--brand-primary);
-                }
-
-                &.is-focus {
-                  border-color: var(--brand-primary);
-                  box-shadow: 0 0 0 2px rgba(3, 102, 214, 0.1);
+                  color: #667eea;
                 }
               }
-            }
-          }
 
-          .filter-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-
-            .status-filter {
-              width: 140px;
-
-              :deep(.el-select__wrapper) {
-                border-radius: 8px;
-                border: 1px solid #e2e8f0;
-
-                &:hover {
-                  border-color: var(--brand-primary);
-                }
+              &:last-child .el-breadcrumb__inner {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                font-weight: 600;
               }
             }
           }
         }
       }
+
+      .page-description {
+        margin: 0;
+        font-size: 16px;
+        color: #64748b;
+        font-weight: 500;
+        line-height: 1.5;
+      }
     }
 
-    .modern-table-container {
-      .table-card {
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        background: #ffffff;
+    .header-right {
+      .header-controls {
+        display: flex;
+        align-items: center;
+        gap: 16px;
 
-        :deep(.el-card__header) {
-          padding: 20px;
-          border-bottom: 1px solid #f1f5f9;
-
-          .table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-
-            .header-left {
+        .view-mode-switch {
+          :deep(.el-radio-button) {
+            .el-radio-button__inner {
               display: flex;
               align-items: center;
-              gap: 12px;
-
-              .table-title {
-                font-size: 18px;
-                font-weight: 600;
-                color: #1e293b;
-                margin: 0;
+              gap: 6px;
+              padding: 8px 16px;
+              border-radius: 12px;
+              font-weight: 600;
+              transition: all 0.3s ease;
+              border: 1px solid #e2e8f0;
+              background: rgba(255, 255, 255, 0.9);
+              
+              &:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
               }
-
-              :deep(.el-tag) {
-                background: var(--chip-bg-info);
-                color: var(--chip-text-info);
-                border: 1px solid var(--chip-border-info);
-              }
+            }
+            
+            &.is-active .el-radio-button__inner {
+              background: #0366d6;
+              color: white;
+              border-color: #0366d6;
             }
           }
         }
 
-        :deep(.el-card__body) {
-          padding: 0;
-        }
-      }
-    }
-  }
+        .header-actions {
+          :deep(.el-button) {
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
 
-  /* 现代化统计卡片 */
-  .modern-stats-section {
-    max-width: 1400px;
-    margin: 0 auto 24px;
-    padding: 0 24px;
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-
-      .stat-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 24px;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-          border-color: #cbd5e1;
-        }
-
-        .card-content {
-          .stat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 16px;
-
-            .stat-icon-container {
+            &.is-circle {
               width: 48px;
               height: 48px;
-              border-radius: 12px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              position: relative;
-
-              .stat-icon {
-                font-size: 24px;
-              }
-
-              &.total {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: #ffffff;
-              }
-
-              &.active {
-                background: var(--chip-bg-success);
-                color: var(--chip-text-success);
-              }
-
-              &.syncing {
-                background: var(--chip-bg-warning);
-                color: var(--chip-text-warning);
-
-                .rotating {
-                  animation: rotate 2s linear infinite;
-                }
-              }
-
-              &.error {
-                background: var(--chip-bg-danger);
-                color: var(--chip-text-danger);
-              }
-            }
-
-            .stat-trend {
-              color: #10b981;
-              font-size: 16px;
-            }
-
-            .stat-badge {
-              padding: 4px 8px;
-              border-radius: 6px;
-              font-size: 12px;
-              font-weight: 600;
-
-              &.success {
-                background: var(--chip-bg-success);
-                color: var(--chip-text-success);
-              }
-            }
-
-            .stat-pulse {
-              width: 8px;
-              height: 8px;
-              background: var(--chip-text-warning);
               border-radius: 50%;
-              animation: pulse 2s infinite;
+            }
+            
+            &:not(.is-circle):hover {
+              transform: translateY(-2px);
+              box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            }
+            
+            &.el-button--primary:not(.is-link) {
+              background: #0366d6;
+              border: 1px solid #0366d6;
+              color: #fff;
+
+              &:hover {
+                background: #0256cc;
+                border-color: #0256cc;
+                transform: translateY(-2px);
+                box-shadow: none;
+              }
             }
 
-            .stat-alert {
-              color: var(--chip-text-danger);
-              font-size: 16px;
-              animation: bounce 2s infinite;
+            &.is-link {
+              background: transparent;
+              border: none;
+              box-shadow: none;
+              color: #0366d6;
+              padding: 0 4px;
             }
-          }
-
-          .stat-body {
-            .stat-number {
-              font-size: 32px;
-              font-weight: 700;
-              color: #1e293b;
-              line-height: 1;
-              margin-bottom: 4px;
-            }
-
-            .stat-label {
-              font-size: 14px;
-              font-weight: 600;
-              color: #475569;
-              margin-bottom: 4px;
-            }
-
-            .stat-description {
-              font-size: 12px;
-              color: #64748b;
-              line-height: 1.4;
-            }
-          }
-        }
-
-        &.total-card {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: #ffffff;
-          border: none;
-
-          .stat-number,
-          .stat-label,
-          .stat-description {
-            color: #ffffff;
-          }
-
-          .stat-description {
-            opacity: 0.8;
           }
         }
       }
     }
-  }
-
-  /* 动画效果 */
-  @keyframes rotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-
-  @keyframes bounce {
-    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-    40% { transform: translateY(-4px); }
-    60% { transform: translateY(-2px); }
   }
 }
 

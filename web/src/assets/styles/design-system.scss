@@ -1,0 +1,347 @@
+/* 现代化设计系统 - 统一全站组件样式 */
+
+/* ===== 现代化页面头部组件 ===== */
+.modern-page-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 24px 0;
+  margin-bottom: 24px;
+
+  .header-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+
+    .header-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 32px;
+
+      .title-section {
+        flex: 1;
+
+        .title-group {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 8px;
+
+          .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+            line-height: 1.2;
+          }
+
+          .title-badge {
+            :deep(.el-tag) {
+              background: var(--chip-bg-primary);
+              color: var(--chip-text-primary);
+              border: 1px solid var(--chip-border-primary);
+              font-weight: 500;
+            }
+          }
+        }
+
+        .page-subtitle {
+          font-size: 14px;
+          color: #64748b;
+          line-height: 1.5;
+          margin: 0;
+          max-width: 500px;
+        }
+      }
+
+      .header-controls {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+
+        .action-group {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          .refresh-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #64748b;
+
+            &:hover {
+              border-color: var(--brand-primary);
+              color: var(--brand-primary);
+            }
+          }
+
+          .secondary-btn {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            color: #475569;
+            font-weight: 500;
+
+            &:hover {
+              border-color: var(--brand-primary);
+              color: var(--brand-primary);
+            }
+          }
+
+          .primary-btn {
+            background: var(--brand-primary);
+            border: 1px solid var(--brand-primary);
+            color: #ffffff;
+            font-weight: 600;
+
+            &:hover {
+              background: var(--brand-primary-hover);
+              border-color: var(--brand-primary-hover);
+            }
+          }
+
+          :deep(.el-divider--vertical) {
+            height: 20px;
+            border-color: #e2e8f0;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* ===== 现代化统计卡片组件 ===== */
+.modern-stats-section {
+  max-width: 1400px;
+  margin: 0 auto 24px;
+  padding: 0 24px;
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        border-color: #cbd5e1;
+      }
+
+      .card-content {
+        .stat-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 16px;
+
+          .stat-icon-container {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+
+            .stat-icon {
+              font-size: 24px;
+            }
+
+            &.total {
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: #ffffff;
+            }
+
+            &.active, &.valid {
+              background: var(--chip-bg-success);
+              color: var(--chip-text-success);
+            }
+
+            &.syncing, &.expiring {
+              background: var(--chip-bg-warning);
+              color: var(--chip-text-warning);
+
+              .rotating {
+                animation: rotate 2s linear infinite;
+              }
+            }
+
+            &.error, &.expired {
+              background: var(--chip-bg-danger);
+              color: var(--chip-text-danger);
+            }
+          }
+
+          .stat-trend {
+            color: #10b981;
+            font-size: 16px;
+          }
+
+          .stat-badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+
+            &.success {
+              background: var(--chip-bg-success);
+              color: var(--chip-text-success);
+            }
+          }
+
+          .stat-pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--chip-text-warning);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+          }
+
+          .stat-alert, .stat-urgent {
+            font-size: 16px;
+            animation: bounce 2s infinite;
+          }
+
+          .stat-alert {
+            color: var(--chip-text-warning);
+          }
+
+          .stat-urgent {
+            color: var(--chip-text-danger);
+          }
+        }
+
+        .stat-body {
+          .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1;
+            margin-bottom: 4px;
+          }
+
+          .stat-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 4px;
+          }
+
+          .stat-description {
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.4;
+          }
+        }
+      }
+
+      &.total-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff;
+        border: none;
+
+        .stat-number,
+        .stat-label,
+        .stat-description {
+          color: #ffffff;
+        }
+
+        .stat-description {
+          opacity: 0.8;
+        }
+      }
+    }
+  }
+}
+
+/* ===== 现代化搜索筛选组件 ===== */
+.modern-search-section {
+  max-width: 1400px;
+  margin: 0 auto 24px;
+  padding: 0 24px;
+
+  .search-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+
+    :deep(.el-card__body) {
+      padding: 20px;
+    }
+
+    .search-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+
+      .search-left {
+        flex: 1;
+        max-width: 400px;
+
+        .search-input {
+          :deep(.el-input__wrapper) {
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: none;
+
+            &:hover {
+              border-color: var(--brand-primary);
+            }
+
+            &.is-focus {
+              border-color: var(--brand-primary);
+              box-shadow: 0 0 0 2px rgba(3, 102, 214, 0.1);
+            }
+          }
+        }
+      }
+
+      .search-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .status-filter {
+          width: 140px;
+
+          :deep(.el-select__wrapper) {
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+
+            &:hover {
+              border-color: var(--brand-primary);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/* ===== 动画效果 ===== */
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-4px); }
+  60% { transform: translateY(-2px); }
+}

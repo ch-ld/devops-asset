@@ -1,0 +1,435 @@
+/* Art Design Pro 现代化设计系统 */
+
+// 设计令牌
+:root {
+  // 主色调
+  --primary-color: #1890ff;
+  --primary-hover: #40a9ff;
+  --primary-active: #096dd9;
+  --primary-light: #e6f7ff;
+  
+  // 成功色
+  --success-color: #52c41a;
+  --success-light: #f6ffed;
+  
+  // 警告色
+  --warning-color: #faad14;
+  --warning-light: #fffbe6;
+  
+  // 错误色
+  --error-color: #ff4d4f;
+  --error-light: #fff2f0;
+  
+  // 中性色
+  --text-primary: #262626;
+  --text-secondary: #595959;
+  --text-tertiary: #8c8c8c;
+  --text-quaternary: #bfbfbf;
+  
+  // 背景色
+  --bg-primary: #ffffff;
+  --bg-secondary: #fafafa;
+  --bg-tertiary: #f5f5f5;
+  --bg-quaternary: #f0f0f0;
+  
+  // 边框色
+  --border-primary: #d9d9d9;
+  --border-secondary: #f0f0f0;
+  
+  // 阴影
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  
+  // 圆角
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  
+  // 间距
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+}
+
+// 现代化页面容器
+.modern-page-container {
+  background: var(--bg-secondary);
+  min-height: 100vh;
+  padding: var(--spacing-lg);
+  
+  .page-header {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl) var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      
+      .title-section {
+        .page-title {
+          font-size: 24px;
+          font-weight: 600;
+          color: var(--text-primary);
+          margin: 0 0 var(--spacing-sm) 0;
+          display: flex;
+          align-items: center;
+          gap: var(--spacing-sm);
+          
+          .title-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-light);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+          }
+        }
+        
+        .page-description {
+          color: var(--text-secondary);
+          font-size: 14px;
+          margin: 0;
+          line-height: 1.5;
+        }
+      }
+      
+      .header-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+        align-items: center;
+      }
+    }
+  }
+}
+
+// 现代化统计卡片
+.modern-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  
+  .stat-card {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-secondary);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    
+    &:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-md);
+      
+      .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        
+        &.primary {
+          background: var(--primary-light);
+          color: var(--primary-color);
+        }
+        
+        &.success {
+          background: var(--success-light);
+          color: var(--success-color);
+        }
+        
+        &.warning {
+          background: var(--warning-light);
+          color: var(--warning-color);
+        }
+        
+        &.error {
+          background: var(--error-light);
+          color: var(--error-color);
+        }
+      }
+      
+      .stat-trend {
+        font-size: 12px;
+        padding: 2px 6px;
+        border-radius: var(--radius-sm);
+        
+        &.up {
+          background: var(--success-light);
+          color: var(--success-color);
+        }
+        
+        &.down {
+          background: var(--error-light);
+          color: var(--error-color);
+        }
+      }
+    }
+    
+    .stat-content {
+      .stat-number {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-xs);
+        line-height: 1;
+      }
+      
+      .stat-label {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-xs);
+      }
+      
+      .stat-description {
+        font-size: 12px;
+        color: var(--text-tertiary);
+        line-height: 1.4;
+      }
+    }
+    
+    // 装饰性背景图案
+    &::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, transparent 30%, rgba(24, 144, 255, 0.05) 50%, transparent 70%);
+      transform: rotate(45deg);
+      pointer-events: none;
+    }
+  }
+}
+
+// 现代化内容卡片
+.modern-content-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-secondary);
+  overflow: hidden;
+  
+  .card-header {
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-secondary);
+    background: var(--bg-primary);
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      
+      .header-left {
+        .card-title {
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--text-primary);
+          margin: 0 0 var(--spacing-xs) 0;
+        }
+        
+        .card-subtitle {
+          font-size: 14px;
+          color: var(--text-secondary);
+          margin: 0;
+        }
+      }
+      
+      .header-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+        align-items: center;
+      }
+    }
+  }
+  
+  .card-content {
+    padding: var(--spacing-lg);
+  }
+}
+
+// 现代化按钮样式
+.modern-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  
+  &.primary {
+    background: var(--primary-color);
+    color: white;
+    
+    &:hover {
+      background: var(--primary-hover);
+    }
+    
+    &:active {
+      background: var(--primary-active);
+    }
+  }
+  
+  &.secondary {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border-color: var(--border-primary);
+    
+    &:hover {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+  }
+  
+  &.success {
+    background: var(--success-color);
+    color: white;
+    
+    &:hover {
+      background: #73d13d;
+    }
+  }
+  
+  &.warning {
+    background: var(--warning-color);
+    color: white;
+    
+    &:hover {
+      background: #ffc53d;
+    }
+  }
+  
+  &.danger {
+    background: var(--error-color);
+    color: white;
+    
+    &:hover {
+      background: #ff7875;
+    }
+  }
+  
+  &.ghost {
+    background: transparent;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    
+    &:hover {
+      background: var(--primary-light);
+    }
+  }
+  
+  &.text {
+    background: transparent;
+    color: var(--primary-color);
+    border: none;
+    padding: 4px 8px;
+    
+    &:hover {
+      background: var(--primary-light);
+    }
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    
+    &:hover {
+      background: var(--bg-quaternary);
+      border-color: var(--border-primary);
+      color: var(--text-quaternary);
+    }
+  }
+}
+
+// 现代化表格样式
+.modern-table {
+  .el-table {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border-secondary);
+    
+    .el-table__header {
+      background: var(--bg-tertiary);
+      
+      th {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 14px;
+        border-bottom: 1px solid var(--border-primary);
+        padding: 16px 12px;
+      }
+    }
+    
+    .el-table__body {
+      tr {
+        &:hover {
+          background: var(--bg-secondary);
+        }
+        
+        td {
+          border-bottom: 1px solid var(--border-secondary);
+          padding: 16px 12px;
+          color: var(--text-primary);
+          font-size: 14px;
+        }
+      }
+    }
+  }
+}
+
+// 现代化搜索区域
+.modern-search-section {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-secondary);
+  
+  .search-content {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    flex-wrap: wrap;
+    
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .search-filters {
+      display: flex;
+      gap: var(--spacing-sm);
+      align-items: center;
+    }
+  }
+}
